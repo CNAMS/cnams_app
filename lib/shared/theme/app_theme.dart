@@ -58,7 +58,8 @@ class AppTheme {
         );
       case GrowthClass.overweight:
         return const ClassificationStyle(
-          color: Color(0xFF1565C0), // blue — distinct from the malnutrition scale
+          color:
+              Color(0xFF1565C0), // blue — distinct from the malnutrition scale
           onColor: Colors.white,
           icon: Icons.info,
         );
