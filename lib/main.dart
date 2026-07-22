@@ -3,6 +3,8 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:cgms_app/core/l10n/generated/app_localizations.dart';
+import 'package:cgms_app/features/home/home_screen.dart';
+import 'package:cgms_app/features/measure/result_demo_screen.dart';
 import 'package:cgms_app/shared/theme/app_theme.dart';
 
 /// Application entry point.
@@ -36,18 +38,43 @@ class CgmsApp extends StatelessWidget {
   }
 }
 
-/// Placeholder shell that proves localisation is wired end to end. The real
-/// bottom-navigation host (Home / Roster / Centre / Settings) lands with those
-/// features.
-class _AppShell extends StatelessWidget {
+/// Bottom-navigation host. Today it carries Home and a Result-banner demo; the
+/// full set (Roster / Centre / Settings) fills in as those features land.
+class _AppShell extends StatefulWidget {
   const _AppShell();
+
+  @override
+  State<_AppShell> createState() => _AppShellState();
+}
+
+class _AppShellState extends State<_AppShell> {
+  int _index = 0;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    const pages = [HomeScreen(), ResultDemoScreen()];
+    final titles = [l10n.navHome, l10n.navResultDemo];
+
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.appTitle)),
-      body: Center(child: Text(l10n.navHome)),
+      appBar: AppBar(title: Text(titles[_index])),
+      body: pages[_index],
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _index,
+        onDestinationSelected: (i) => setState(() => _index = i),
+        destinations: [
+          NavigationDestination(
+            icon: const Icon(Icons.home_outlined),
+            selectedIcon: const Icon(Icons.home),
+            label: l10n.navHome,
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.assignment_outlined),
+            selectedIcon: const Icon(Icons.assignment),
+            label: l10n.navResultDemo,
+          ),
+        ],
+      ),
     );
   }
 }

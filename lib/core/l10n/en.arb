@@ -15,5 +15,15 @@
   "consentWithdrawn": "Consent withdrawn",
   "consentNone": "Consent not recorded",
   "saveAndNext": "Save and next",
-  "syncBacklog": "Pending sync"
+  "syncBacklog": "Pending sync",
+  "homeGreeting": "Namaste",
+  "screenedToday": "Measured today",
+  "flaggedCount": "Flagged",
+  "overdueCount": "Overdue",
+  "newMeasurement": "New measurement",
+  "navResultDemo": "Result demo",
+  "resultDemoHint": "The result banner for each band — colour and word first, z-scores below.",
+  "zScoreWeightForAge": "Weight-for-age (WAZ)",
+  "zScoreHeightForAge": "Height-for-age (HAZ)",
+  "zScoreWeightForHeight": "Weight-for-height (WHZ)"
 }

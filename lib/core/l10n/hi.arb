@@ -21,5 +21,15 @@
   "consentWithdrawn": "सहमति वापस ली गई",
   "consentNone": "सहमति नहीं ली गई",
   "saveAndNext": "सहेजें और अगला",
-  "syncBacklog": "लंबित सिंक"
+  "syncBacklog": "लंबित सिंक",
+  "homeGreeting": "नमस्ते",
+  "screenedToday": "आज मापे गए",
+  "flaggedCount": "चिह्नित",
+  "overdueCount": "बकाया",
+  "newMeasurement": "नया माप लें",
+  "navResultDemo": "परिणाम नमूना",
+  "resultDemoHint": "हर श्रेणी का परिणाम बैनर — रंग और शब्द पहले, ज़ेड-स्कोर नीचे।",
+  "zScoreWeightForAge": "वज़न-आयु (WAZ)",
+  "zScoreHeightForAge": "लंबाई-आयु (HAZ)",
+  "zScoreWeightForHeight": "वज़न-लंबाई (WHZ)"
 }
