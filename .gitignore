@@ -43,3 +43,6 @@ secrets.dart
 
 # Coverage
 coverage/
+
+# Flutter tool crash logs
+flutter_*.log
