@@ -27,6 +27,7 @@ class Centres extends Table {
 }
 
 /// A child on the roster.
+@DataClassName('Child')
 class Children extends Table {
   TextColumn get id => text()();
   TextColumn get centreId => text().references(Centres, #id)();
