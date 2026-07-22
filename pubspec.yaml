@@ -18,9 +18,11 @@ dependencies:
   flutter_riverpod: ^2.5.0
   riverpod_annotation: ^2.3.0
 
-  # Local database (SQLite + SQLCipher)
+  # Local database. Only sqlcipher_flutter_libs is included: it ships the native
+  # SQLite build (with SQLCipher for the P4 encryption work) and REPLACES
+  # sqlite3_flutter_libs. Having both breaks the iOS build — they define the
+  # same Sqlite3FlutterLibsPlugin class.
   drift: ^2.16.0
-  sqlite3_flutter_libs: ^0.5.20
   sqlcipher_flutter_libs: ^0.6.0
   path_provider: ^2.1.0
   path: ^1.9.0
