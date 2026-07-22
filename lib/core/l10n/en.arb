@@ -1,0 +1,19 @@
+{
+  "@@locale": "en",
+  "appTitle": "Child Growth System",
+  "navHome": "Home",
+  "navRoster": "Children",
+  "navCentre": "Centre",
+  "navSettings": "Settings",
+  "resultNormal": "Normal",
+  "resultMam": "Moderate malnutrition (MAM)",
+  "resultSam": "Severe malnutrition (SAM)",
+  "resultOverweight": "Overweight",
+  "resultIndeterminate": "Indeterminate",
+  "referralAdvised": "Showing this child to the ANM is advised",
+  "consentGiven": "Consent given",
+  "consentWithdrawn": "Consent withdrawn",
+  "consentNone": "Consent not recorded",
+  "saveAndNext": "Save and next",
+  "syncBacklog": "Pending sync"
+}

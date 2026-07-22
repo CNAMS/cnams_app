@@ -1,0 +1,25 @@
+{
+  "@@locale": "hi",
+  "appTitle": "बाल विकास प्रणाली",
+  "@appTitle": {
+    "description": "Application title shown in the launcher and app bar."
+  },
+  "navHome": "मुख्य पृष्ठ",
+  "navRoster": "बच्चों की सूची",
+  "navCentre": "केंद्र",
+  "navSettings": "सेटिंग्स",
+  "resultNormal": "सामान्य",
+  "resultMam": "मध्यम कुपोषण (MAM)",
+  "resultSam": "गंभीर कुपोषण (SAM)",
+  "resultOverweight": "अधिक वजन",
+  "resultIndeterminate": "अनिश्चित",
+  "referralAdvised": "इस बच्चे को ANM को दिखाने की सलाह दी जाती है",
+  "@referralAdvised": {
+    "description": "CON-5: referral is advised, phrased as advice, not an instruction."
+  },
+  "consentGiven": "सहमति दी गई",
+  "consentWithdrawn": "सहमति वापस ली गई",
+  "consentNone": "सहमति नहीं ली गई",
+  "saveAndNext": "सहेजें और अगला",
+  "syncBacklog": "लंबित सिंक"
+}
