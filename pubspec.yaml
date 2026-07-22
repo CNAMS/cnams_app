@@ -1,0 +1,65 @@
+name: cgms_app
+description: Child Growth Management System — field data-capture app for Anganwadi Workers.
+publish_to: "none"
+version: 0.1.0+1
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+  flutter: ">=3.19.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  intl: any
+
+  # State management
+  flutter_riverpod: ^2.5.0
+  riverpod_annotation: ^2.3.0
+
+  # Local database (SQLite + SQLCipher)
+  drift: ^2.16.0
+  sqlite3_flutter_libs: ^0.5.20
+  sqlcipher_flutter_libs: ^0.6.0
+  path_provider: ^2.1.0
+  path: ^1.9.0
+
+  # BLE device integration
+  flutter_blue_plus: ^1.32.0
+
+  # Charts (growth curves)
+  fl_chart: ^0.68.0
+
+  # Background sync
+  workmanager: ^0.5.2
+  connectivity_plus: ^6.0.0
+
+  # Parent card printing / sharing
+  printing: ^5.12.0
+  pdf: ^3.10.0
+  share_plus: ^9.0.0
+
+  # Security
+  flutter_secure_storage: ^9.2.0
+
+  # Utilities
+  uuid: ^4.4.0
+  collection: ^1.18.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  build_runner: ^2.4.0
+  drift_dev: ^2.16.0
+  riverpod_generator: ^2.4.0
+
+flutter:
+  uses-material-design: true
+  generate: true
+
+  assets:
+    - assets/who_reference/

@@ -1,0 +1,7 @@
+arb-dir: lib/core/l10n
+template-arb-file: hi.arb
+output-localization-file: app_localizations.dart
+output-class: AppLocalizations
+output-dir: lib/core/l10n/generated
+synthetic-package: false
+# Hindi is the primary/template locale; English is the fallback.
