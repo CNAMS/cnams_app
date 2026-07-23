@@ -67,5 +67,11 @@
   "validationDobRequired": "जन्म तिथि चुनें",
   "withdrawConsent": "सहमति वापस लें",
   "withdrawConsentConfirm": "इस बच्चे का रिकॉर्ड हटा दिया जाएगा। जारी रखें?",
-  "childSaved": "सहेजा गया"
+  "childSaved": "सहेजा गया",
+  "settingsLanguage": "भाषा",
+  "settingsLanguageSubtitle": "ऐप की भाषा चुनें",
+  "languageHindi": "हिन्दी",
+  "languageEnglish": "English",
+  "settingsAbout": "ऐप के बारे में",
+  "settingsAboutSubtitle": "बाल विकास प्रबंधन प्रणाली"
 }

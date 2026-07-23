@@ -61,5 +61,11 @@
   "validationDobRequired": "Select a date of birth",
   "withdrawConsent": "Withdraw consent",
   "withdrawConsentConfirm": "This child's record will be removed. Continue?",
-  "childSaved": "Saved"
+  "childSaved": "Saved",
+  "settingsLanguage": "Language",
+  "settingsLanguageSubtitle": "Choose the app language",
+  "languageHindi": "हिन्दी",
+  "languageEnglish": "English",
+  "settingsAbout": "About",
+  "settingsAboutSubtitle": "Child Growth Management System"
 }
