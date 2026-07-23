@@ -7,6 +7,7 @@
 // See docs/PRODUCTION_ROADMAP.md — Phase P2.
 
 import 'package:cgms_app/core/zscore/classification.dart';
+import 'package:cgms_app/core/zscore/reference_tables.dart';
 
 /// Anthropometric inputs for a single measurement.
 class ZScoreInput {
@@ -56,18 +57,9 @@ class ZScoreResult {
   final List<String> flags;
 }
 
-enum Sex { male, female }
-
-/// The WHO LMS engine. Stateless and deterministic.
+/// The WHO LMS engine. Stateless and deterministic. [Sex] lives in
+/// reference_tables.dart so the tables and the engine share one definition.
 abstract class ZScoreEngine {
-  /// Bumped whenever the computation changes; stored on every measurement row
-  /// so historical records remain reproducible/auditable.
-  static const String version = '0.0.0-scaffold';
-
   /// Compute z-scores and classification for a single measurement.
-  ///
-  /// TODO(P2): implement WHO LMS lookup + interpolation against bundled
-  /// reference tables, position correction at 24 months, oedema override,
-  /// and plausibility flagging.
   ZScoreResult compute(ZScoreInput input);
 }
