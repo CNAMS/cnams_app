@@ -1,0 +1,5 @@
+{
+  "source": "WHO Child Growth Standards (0-5y, 2006) + MUAC-for-age (2007)",
+  "note": "PLACEHOLDER — replace `tables` with the official WHO LMS coefficients before Gate G2. Until then the engine reports every child as indeterminate (no table = no z-score), which is the correct fail-safe. See assets/who_reference/README.md for the format and how to generate this file.",
+  "tables": []
+}
