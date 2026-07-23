@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cgms_app/core/l10n/generated/app_localizations.dart';
 import 'package:cgms_app/features/home/home_screen.dart';
 import 'package:cgms_app/features/measure/result_demo_screen.dart';
+import 'package:cgms_app/features/roster/roster_screen.dart';
 import 'package:cgms_app/shared/theme/app_theme.dart';
 
 /// Application entry point.
@@ -53,8 +54,8 @@ class _AppShellState extends State<_AppShell> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    const pages = [HomeScreen(), ResultDemoScreen()];
-    final titles = [l10n.navHome, l10n.navResultDemo];
+    const pages = [HomeScreen(), RosterScreen(), ResultDemoScreen()];
+    final titles = [l10n.navHome, l10n.navRoster, l10n.navResultDemo];
 
     return Scaffold(
       appBar: AppBar(title: Text(titles[_index])),
@@ -67,6 +68,11 @@ class _AppShellState extends State<_AppShell> {
             icon: const Icon(Icons.home_outlined),
             selectedIcon: const Icon(Icons.home),
             label: l10n.navHome,
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.people_outline),
+            selectedIcon: const Icon(Icons.people),
+            label: l10n.navRoster,
           ),
           NavigationDestination(
             icon: const Icon(Icons.assignment_outlined),
