@@ -108,6 +108,8 @@ captured as a first-class, auditable record.
 - Consent-withdrawal path stub (wires to soft-delete + future server mirror).
 - Riverpod state architecture: repositories over DAOs, immutable view models.
 - Empty states and error messages in Hindi.
+- Settings screen with a **language switch (Hindi ⇄ English)**, applied live and persisted across
+  restarts (see the Localisation cross-cutting section).
 
 ### Entry criteria
 - G0 signed off; schema available.
@@ -117,6 +119,7 @@ captured as a first-class, auditable record.
 - [ ] Consent status and timestamp persisted and shown on the child record.
 - [ ] DOB precision selectable and stored; estimated DOBs visually flagged.
 - [ ] Repository + DAO unit tests cover create/update/soft-delete/search.
+- [ ] Language switch changes the app immediately and survives a restart.
 - [ ] Roster loads < 500 ms with 500 seeded children on the target device.
 
 ### Risks
@@ -320,7 +323,10 @@ printer queue.
 ## Cross-cutting: Localisation & Accessibility (all phases)
 
 - All user-facing strings in `hi.arb` from P0; lint fails the build on hardcoded text (`NFR-16`).
-- **Hindi first, English fallback** — default locale `hi`.
+- **Hindi first, English fallback** — default locale `hi` on first launch.
+- **Runtime language switch (Hindi ⇄ English)** available from Settings. Changing it re-renders the
+  whole app immediately and the choice is **persisted** (SharedPreferences) so it survives a restart.
+  Delivered in P1; the two language names are always shown in their own script (हिन्दी / English).
 - Devanagari vs Latin numerals decided **with the AWWs**, not the team (settle in W3–W6 interviews).
 - Minimum touch target 48 dp; base font 16 sp; honour system scaling.
 - Every colour-coded status also carries text or an icon.
