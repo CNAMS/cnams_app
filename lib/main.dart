@@ -1,32 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:cgms_app/core/l10n/generated/app_localizations.dart';
+import 'package:cgms_app/core/providers.dart';
+import 'package:cgms_app/core/settings/locale_controller.dart';
 import 'package:cgms_app/features/home/home_screen.dart';
 import 'package:cgms_app/features/measure/result_demo_screen.dart';
 import 'package:cgms_app/features/roster/roster_screen.dart';
+import 'package:cgms_app/features/settings/settings_screen.dart';
 import 'package:cgms_app/shared/theme/app_theme.dart';
 
 /// Application entry point.
 ///
-/// Hindi (`hi`) is the primary and default locale; English (`en`) is the
-/// fallback. See docs/PRODUCTION_ROADMAP.md — Phase P0.
-void main() {
-  runApp(const ProviderScope(child: CgmsApp()));
+/// Hindi (`hi`) is the default locale on first launch; the worker can switch to
+/// English from Settings and the choice persists. See
+/// docs/PRODUCTION_ROADMAP.md — Phase P0 and the Localisation section.
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final prefs = await SharedPreferences.getInstance();
+  runApp(
+    ProviderScope(
+      overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+      child: const CgmsApp(),
+    ),
+  );
 }
 
-class CgmsApp extends StatelessWidget {
+class CgmsApp extends ConsumerWidget {
   const CgmsApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final locale = ref.watch(localeControllerProvider);
     return MaterialApp(
       onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
-      // Hindi first, English fallback.
-      locale: const Locale('hi'),
+      locale: locale,
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: const [
         AppLocalizations.delegate,
@@ -54,8 +66,18 @@ class _AppShellState extends State<_AppShell> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    const pages = [HomeScreen(), RosterScreen(), ResultDemoScreen()];
-    final titles = [l10n.navHome, l10n.navRoster, l10n.navResultDemo];
+    const pages = [
+      HomeScreen(),
+      RosterScreen(),
+      ResultDemoScreen(),
+      SettingsScreen(),
+    ];
+    final titles = [
+      l10n.navHome,
+      l10n.navRoster,
+      l10n.navResultDemo,
+      l10n.navSettings,
+    ];
 
     return Scaffold(
       appBar: AppBar(title: Text(titles[_index])),
@@ -78,6 +100,11 @@ class _AppShellState extends State<_AppShell> {
             icon: const Icon(Icons.assignment_outlined),
             selectedIcon: const Icon(Icons.assignment),
             label: l10n.navResultDemo,
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.settings_outlined),
+            selectedIcon: const Icon(Icons.settings),
+            label: l10n.navSettings,
           ),
         ],
       ),
