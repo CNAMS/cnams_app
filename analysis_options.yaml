@@ -18,5 +18,6 @@ linter:
     - always_use_package_imports
     - prefer_const_constructors
     - prefer_final_locals
-    - require_trailing_commas
     - avoid_print
+    # Note: require_trailing_commas is intentionally omitted — the current Dart
+    # formatter manages commas itself and the two conflict.
