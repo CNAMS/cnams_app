@@ -3,13 +3,24 @@
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:cgms_app/core/providers.dart';
 import 'package:cgms_app/main.dart';
 
 void main() {
-  testWidgets('app boots in Hindi and can switch to the result demo',
-      (tester) async {
-    await tester.pumpWidget(const ProviderScope(child: CgmsApp()));
+  testWidgets('app boots in Hindi and can switch to the result demo', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+        child: const CgmsApp(),
+      ),
+    );
     await tester.pumpAndSettle();
 
     // Home tab first: greeting and the new-measurement button, in Hindi.
