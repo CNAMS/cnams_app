@@ -13,6 +13,7 @@ import 'package:cgms_app/core/zscore/classification.dart';
 import 'package:cgms_app/core/zscore/reference_tables.dart';
 import 'package:cgms_app/features/history/growth_chart.dart';
 import 'package:cgms_app/features/history/growth_series.dart';
+import 'package:cgms_app/features/history/parent_card_screen.dart';
 import 'package:cgms_app/features/measure/capture_flow_screen.dart';
 import 'package:cgms_app/shared/theme/app_theme.dart';
 
@@ -40,9 +41,33 @@ class ChildHistoryScreen extends ConsumerWidget {
     final measurements = ref.watch(measurementsProvider(child.id));
     final tables = ref.watch(referenceTablesProvider).valueOrNull;
 
+    final rowsValue = measurements.valueOrNull;
+    final latest =
+        (rowsValue != null && rowsValue.isNotEmpty) ? rowsValue.first : null;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(child.name), // i18n-ignore: the child's own name
+        actions: [
+          if (latest != null)
+            IconButton(
+              tooltip: l10n.parentCard,
+              icon: const Icon(Icons.badge_outlined),
+              onPressed: () {
+                final growthClass = _classOf(latest.classification);
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => ParentCardScreen(
+                      child: child,
+                      measurement: latest,
+                      classificationLabel: _label(l10n, growthClass),
+                      growthClass: growthClass,
+                    ),
+                  ),
+                );
+              },
+            ),
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => Navigator.of(context).push(
