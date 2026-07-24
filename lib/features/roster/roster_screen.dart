@@ -10,7 +10,7 @@ import 'package:cgms_app/core/data/child_repository.dart';
 import 'package:cgms_app/core/db/app_database.dart';
 import 'package:cgms_app/core/l10n/generated/app_localizations.dart';
 import 'package:cgms_app/core/providers.dart';
-import 'package:cgms_app/features/measure/capture_flow_screen.dart';
+import 'package:cgms_app/features/history/child_history_screen.dart';
 import 'package:cgms_app/features/roster/child_registration_screen.dart';
 
 class RosterScreen extends ConsumerStatefulWidget {
@@ -45,10 +45,10 @@ class _RosterScreenState extends ConsumerState<RosterScreen> {
     );
   }
 
-  void _measure(Child child) {
+  void _openChild(Child child) {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => CaptureFlowScreen(child: child),
+        builder: (_) => ChildHistoryScreen(child: child),
       ),
     );
   }
@@ -106,7 +106,7 @@ class _RosterScreenState extends ConsumerState<RosterScreen> {
                     itemBuilder: (_, i) => _RosterTile(
                       entry: entries[i],
                       l10n: l10n,
-                      onTap: () => _measure(entries[i].child),
+                      onTap: () => _openChild(entries[i].child),
                     ),
                   );
                 },

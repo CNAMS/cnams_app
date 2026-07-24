@@ -89,5 +89,19 @@
   "saveMeasurement": "Save measurement",
   "measurementSaved": "Measurement saved",
   "unitKg": "kg",
-  "unitCm": "cm"
+  "unitCm": "cm",
+  "historyTitle": "Child details",
+  "historyGrowthCurve": "Growth curve (weight-for-age)",
+  "historyPreviousVisits": "Previous measurements",
+  "historyNoVisits": "No measurements yet",
+  "historyAgeMonths": "{months} months",
+  "@historyAgeMonths": {
+    "placeholders": { "months": { "type": "String" } }
+  },
+  "historyLatestResult": "Latest result",
+  "axisAgeMonths": "Age (months)",
+  "axisWeightKg": "Weight (kg)",
+  "parentCard": "Parent card",
+  "parentCardShare": "Share",
+  "parentCardPrint": "Print"
 }

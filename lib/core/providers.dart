@@ -61,6 +61,12 @@ final rosterProvider = StreamProvider<List<RosterEntry>>((ref) async* {
   yield* ref.watch(childRepositoryProvider).watchRoster(centreId);
 });
 
+/// A child's measurement history, newest first.
+final measurementsProvider =
+    StreamProvider.family<List<Measurement>, String>((ref, childId) {
+  return ref.watch(measurementRepositoryProvider).watchForChild(childId);
+});
+
 /// The bundled WHO reference tables, loaded once from assets.
 final referenceTablesProvider = FutureProvider<ReferenceTables>(
   (ref) => loadReferenceTables(),

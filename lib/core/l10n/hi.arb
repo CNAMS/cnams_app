@@ -95,5 +95,19 @@
   "saveMeasurement": "माप सहेजें",
   "measurementSaved": "माप सहेजा गया",
   "unitKg": "किग्रा",
-  "unitCm": "सेमी"
+  "unitCm": "सेमी",
+  "historyTitle": "बच्चे का विवरण",
+  "historyGrowthCurve": "वृद्धि वक्र (वज़न-आयु)",
+  "historyPreviousVisits": "पिछली मापें",
+  "historyNoVisits": "अभी तक कोई माप नहीं",
+  "historyAgeMonths": "{months} माह",
+  "@historyAgeMonths": {
+    "placeholders": { "months": { "type": "String" } }
+  },
+  "historyLatestResult": "नवीनतम परिणाम",
+  "axisAgeMonths": "आयु (माह)",
+  "axisWeightKg": "वज़न (किग्रा)",
+  "parentCard": "अभिभावक कार्ड",
+  "parentCardShare": "साझा करें",
+  "parentCardPrint": "प्रिंट करें"
 }
