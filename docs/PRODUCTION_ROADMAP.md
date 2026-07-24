@@ -50,6 +50,18 @@ so downstream phases are never blocked by hardware.
 | **G4** | Security & export | P5 start | Security reviewer + AWW |
 | **G5** | Release readiness | Handover | Product owner |
 
+### Implementation status (living)
+
+| Phase | Status | Notes |
+|---|---|---|
+| **P0** Foundation | ✅ delivered | drift schema + DAOs, theme, Hindi-first l10n with NFR-16 lint, layering test, CI. |
+| **P1** Roster & data core | ✅ delivered | Repositories over DAOs, offline registration + consent, roster with search/overdue, **runtime Hindi⇄English switch** (persisted). |
+| **P2** Engine & mock capture | ✅ delivered (data drop-in pending) | Pure-Dart LMS engine + classification + boundary, mock BLE client, packet codec, full capture flow. **Gate G2 needs the official WHO tables dropped into `assets/who_reference/tables.json`** — it ships empty and fail-safe (everything reports *indeterminate*, oedema still forces SAM). |
+| **P3** Device & result UX | 🚧 in progress | Child history hub + weight-for-age growth curve, parent card (PDF preview/share/print), real BLE client skeleton behind the interface. Usability session with AWWs still to do. |
+
+> The z-score engine's numeric correctness is unit-tested against hand-computed LMS values; validation
+> against WHO Anthro (the golden corpus) is what closes Gate G2 once the official tables are loaded.
+
 ---
 
 ## Phase P0 — Foundation & Tooling
