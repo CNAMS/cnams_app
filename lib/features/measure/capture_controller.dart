@@ -85,6 +85,9 @@ class CaptureController extends StateNotifier<CaptureSession> {
   final String appVersion;
   final String? deviceSerial;
 
+  /// The current session snapshot (public view of the protected state).
+  CaptureSession get session => state;
+
   /// Whether the child's age calls for a recumbent (lying) length measurement.
   bool get recumbentExpected => isRecumbentExpected(state.ageDays);
 

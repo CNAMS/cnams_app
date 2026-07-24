@@ -6,8 +6,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:cgms_app/core/ble/device_client.dart';
+import 'package:cgms_app/core/ble/mock_device_client.dart';
 import 'package:cgms_app/core/data/centre_repository.dart';
 import 'package:cgms_app/core/data/child_repository.dart';
+import 'package:cgms_app/core/data/measurement_repository.dart';
 import 'package:cgms_app/core/db/app_database.dart';
 import 'package:cgms_app/core/reference/reference_loader.dart';
 import 'package:cgms_app/core/zscore/reference_tables.dart';
@@ -34,6 +37,16 @@ final centreRepositoryProvider = Provider<CentreRepository>(
 
 final childRepositoryProvider = Provider<ChildRepository>(
   (ref) => ChildRepository(ref.watch(appDatabaseProvider)),
+);
+
+final measurementRepositoryProvider = Provider<MeasurementRepository>(
+  (ref) => MeasurementRepository(ref.watch(appDatabaseProvider)),
+);
+
+/// The measuring device. P2 always returns the mock; P3 swaps in the real
+/// flutter_blue_plus client behind the same interface.
+final deviceClientProvider = Provider<DeviceClient>(
+  (ref) => MockDeviceClient(),
 );
 
 /// The centre the app is currently operating in. P1 resolves this to the single
