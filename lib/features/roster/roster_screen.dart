@@ -7,8 +7,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:cgms_app/core/data/child_repository.dart';
+import 'package:cgms_app/core/db/app_database.dart';
 import 'package:cgms_app/core/l10n/generated/app_localizations.dart';
 import 'package:cgms_app/core/providers.dart';
+import 'package:cgms_app/features/measure/capture_flow_screen.dart';
 import 'package:cgms_app/features/roster/child_registration_screen.dart';
 
 class RosterScreen extends ConsumerStatefulWidget {
@@ -39,6 +41,14 @@ class _RosterScreenState extends ConsumerState<RosterScreen> {
     await Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => ChildRegistrationScreen(centreId: centreId),
+      ),
+    );
+  }
+
+  void _measure(Child child) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => CaptureFlowScreen(child: child),
       ),
     );
   }
@@ -93,8 +103,11 @@ class _RosterScreenState extends ConsumerState<RosterScreen> {
                   return ListView.separated(
                     itemCount: entries.length,
                     separatorBuilder: (_, __) => const Divider(height: 1),
-                    itemBuilder: (_, i) =>
-                        _RosterTile(entry: entries[i], l10n: l10n),
+                    itemBuilder: (_, i) => _RosterTile(
+                      entry: entries[i],
+                      l10n: l10n,
+                      onTap: () => _measure(entries[i].child),
+                    ),
                   );
                 },
               ),
@@ -112,10 +125,15 @@ class _RosterScreenState extends ConsumerState<RosterScreen> {
 }
 
 class _RosterTile extends StatelessWidget {
-  const _RosterTile({required this.entry, required this.l10n});
+  const _RosterTile({
+    required this.entry,
+    required this.l10n,
+    required this.onTap,
+  });
 
   final RosterEntry entry;
   final AppLocalizations l10n;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -125,6 +143,7 @@ class _RosterTile extends StatelessWidget {
         : l10n.rosterLastMeasured(_fmtDate(entry.lastMeasuredAt!));
 
     return ListTile(
+      onTap: onTap,
       leading: CircleAvatar(
         child: Text(child.name.isEmpty ? '?' : child.name.characters.first),
       ),
