@@ -59,9 +59,9 @@ class SupervisorDashboard extends StatelessWidget {
             ],
           ),
           DashSection(title: l10n.dashOverdueCentres),
-          _CentreRow(name: 'AWC 207 · Rampur', overdue: 18, ok: false),
-          _CentreRow(name: 'AWC 214 · Sitapur', overdue: 5, ok: true),
-          _CentreRow(name: 'AWC 233 · Bansi', overdue: 12, ok: false),
+          const _CentreRow(name: 'AWC 207 · Rampur', overdue: 18, ok: false),
+          const _CentreRow(name: 'AWC 214 · Sitapur', overdue: 5, ok: true),
+          const _CentreRow(name: 'AWC 233 · Bansi', overdue: 12, ok: false),
           DashSection(title: l10n.dashReferralFollowup),
           Card(
             child: Padding(
