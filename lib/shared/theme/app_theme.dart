@@ -41,6 +41,14 @@ class AppTheme {
     return base.copyWith(
       scaffoldBackgroundColor: surface,
       visualDensity: VisualDensity.comfortable,
+      // One quiet, consistent page transition everywhere (EX5 motion).
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: FadeForwardsPageTransitionsBuilder(),
+          TargetPlatform.iOS: FadeForwardsPageTransitionsBuilder(),
+          TargetPlatform.macOS: FadeForwardsPageTransitionsBuilder(),
+        },
+      ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           minimumSize: const Size(minTouchTarget, minTouchTarget),
