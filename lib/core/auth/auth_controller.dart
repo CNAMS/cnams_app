@@ -55,6 +55,11 @@ class AuthController extends AsyncNotifier<AuthSession?> {
 
   Future<void> signOut() async {
     await ref.read(secureStoreProvider).delete(_sessionKey);
+    // Reset session-scoped state so the next sign-in starts clean — critically,
+    // clear the PIN-unlock flag so a different user can't inherit an unlocked
+    // session, and reset the role back to the default.
+    ref.read(sessionUnlockedProvider.notifier).state = false;
+    ref.read(currentRoleProvider.notifier).state = AppRole.aww;
     state = const AsyncData(null);
   }
 }

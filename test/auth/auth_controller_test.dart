@@ -100,14 +100,21 @@ void main() {
       expect(container.read(currentRoleProvider), AppRole.admin);
     });
 
-    test('sign-out clears the session', () async {
+    test('sign-out clears the session and resets unlock + role (security)',
+        () async {
       await container.read(authControllerProvider.future);
       final c = container.read(authControllerProvider.notifier);
       await c.signInWithGoogle(AppRole.doctor);
+      // Simulate the session having been PIN-unlocked.
+      container.read(sessionUnlockedProvider.notifier).state = true;
+
       await c.signOut();
 
       expect(container.read(authControllerProvider).value, isNull);
       expect(store.map.containsKey('auth_session'), isFalse);
+      // A different user must not inherit the unlocked state or the role.
+      expect(container.read(sessionUnlockedProvider), isFalse);
+      expect(container.read(currentRoleProvider), AppRole.aww);
     });
   });
 }
