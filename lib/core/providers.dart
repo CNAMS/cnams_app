@@ -6,6 +6,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:cgms_app/core/auth/pin_auth.dart';
+import 'package:cgms_app/core/auth/secure_store.dart';
 import 'package:cgms_app/core/ble/device_client.dart';
 import 'package:cgms_app/core/ble/mock_device_client.dart';
 import 'package:cgms_app/core/data/centre_repository.dart';
@@ -77,3 +79,33 @@ final zscoreEngineProvider = FutureProvider<ZScoreEngine>((ref) async {
   final tables = await ref.watch(referenceTablesProvider.future);
   return WhoLmsEngine(tables);
 });
+
+/// Secure key/value storage (platform keystore).
+final secureStoreProvider = Provider<SecureStore>(
+  (ref) => const FlutterSecureStore(),
+);
+
+/// PIN unlock.
+final pinAuthProvider = Provider<PinAuth>(
+  (ref) => PinAuth(ref.watch(secureStoreProvider)),
+);
+
+/// Whether a PIN has been set on this device.
+final pinIsSetProvider = FutureProvider<bool>(
+  (ref) => ref.watch(pinAuthProvider).isPinSet(),
+);
+
+/// Whether the app has been unlocked this session (true when no PIN is set).
+final sessionUnlockedProvider = StateProvider<bool>((ref) => false);
+
+/// Outbox counts (pending backlog, dead letters) for Home/Settings. Refresh by
+/// invalidating after a sync or a new write.
+final outboxCountsProvider = FutureProvider<({int pending, int deadLetter})>(
+  (ref) async {
+    final dao = ref.watch(appDatabaseProvider).outboxDao;
+    return (
+      pending: await dao.pendingCount(),
+      deadLetter: await dao.deadLetterCount()
+    );
+  },
+);

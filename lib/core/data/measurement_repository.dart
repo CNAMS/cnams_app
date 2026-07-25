@@ -99,4 +99,26 @@ class MeasurementRepository {
 
   Stream<List<Measurement>> watchForChild(String childId) =>
       _db.measurementsDao.watchForChild(childId);
+
+  /// All measurements in a centre, each paired with its child, oldest first —
+  /// the source rows for CSV export. Returns records rather than a feature type
+  /// so this stays in the core layer.
+  Future<List<(Child, Measurement)>> measurementsWithChildren(
+    String centreId,
+  ) async {
+    final query = _db.select(_db.measurements).join([
+      innerJoin(
+        _db.children,
+        _db.children.id.equalsExp(_db.measurements.childId),
+      ),
+    ])
+      ..where(_db.children.centreId.equals(centreId))
+      ..orderBy([OrderingTerm(expression: _db.measurements.measuredAt)]);
+
+    final rows = await query.get();
+    return [
+      for (final r in rows)
+        (r.readTable(_db.children), r.readTable(_db.measurements)),
+    ];
+  }
 }

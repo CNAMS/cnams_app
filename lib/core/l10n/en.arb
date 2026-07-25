@@ -103,5 +103,18 @@
   "axisWeightKg": "Weight (kg)",
   "parentCard": "Parent card",
   "parentCardShare": "Share",
-  "parentCardPrint": "Print"
+  "parentCardPrint": "Print",
+  "settingsDataSecurity": "Data & security",
+  "syncDeadLetter": "Failed to sync",
+  "exportCsv": "Export CSV",
+  "exportSubject": "Child measurement data",
+  "exportNoData": "No data to export",
+  "pinSet": "Set PIN",
+  "pinChange": "Change PIN",
+  "pinCreate": "Create a PIN",
+  "pinEnter": "Enter PIN",
+  "pinUnlock": "Unlock",
+  "pinWrong": "Wrong PIN",
+  "pinHint": "4 to 6 digits",
+  "pinSaved": "PIN saved"
 }
