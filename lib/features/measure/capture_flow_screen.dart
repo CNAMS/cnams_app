@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:cgms_app/core/auth/auth_controller.dart';
 import 'package:cgms_app/core/ble/device_client.dart';
 import 'package:cgms_app/core/db/app_database.dart';
 import 'package:cgms_app/core/l10n/generated/app_localizations.dart';
@@ -18,7 +19,6 @@ import 'package:cgms_app/core/zscore/classification.dart';
 import 'package:cgms_app/features/measure/capture_controller.dart';
 import 'package:cgms_app/shared/widgets/classification_banner.dart';
 
-const String _workerId = 'local-worker'; // real worker id arrives with P4 PIN
 const String _appVersion = '0.1.0';
 
 class CaptureFlowScreen extends ConsumerStatefulWidget {
@@ -51,11 +51,15 @@ class _CaptureFlowScreenState extends ConsumerState<CaptureFlowScreen> {
 
   CaptureController _ensureController() {
     final engine = ref.read(zscoreEngineProvider).requireValue;
+    // Attribute the measurement to the signed-in user; fall back to a device
+    // label if somehow unauthenticated.
+    final workerId =
+        ref.read(authControllerProvider).valueOrNull?.userId ?? 'local-device';
     return _controller ??= CaptureController(
       child: widget.child,
       engine: engine,
       repository: ref.read(measurementRepositoryProvider),
-      workerId: _workerId,
+      workerId: workerId,
       appVersion: _appVersion,
       deviceSerial: _device.deviceSerial,
     );
