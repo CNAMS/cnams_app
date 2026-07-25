@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:cgms_app/core/auth/auth_controller.dart';
 import 'package:cgms_app/core/l10n/generated/app_localizations.dart';
 import 'package:cgms_app/core/providers.dart';
 
@@ -87,6 +88,15 @@ class _PinUnlockScreenState extends ConsumerState<PinUnlockScreen> {
                     minimumSize: const Size.fromHeight(52),
                   ),
                   child: Text(l10n.pinUnlock),
+                ),
+                const SizedBox(height: 8),
+                // Escape hatch: never trap a user on the PIN screen — they can
+                // sign out and use a different account.
+                TextButton.icon(
+                  onPressed: () =>
+                      ref.read(authControllerProvider.notifier).signOut(),
+                  icon: const Icon(Icons.logout),
+                  label: Text(l10n.signOut),
                 ),
               ],
             ),
