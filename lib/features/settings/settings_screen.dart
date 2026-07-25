@@ -42,7 +42,18 @@ class SettingsScreen extends ConsumerWidget {
     final dir = await getTemporaryDirectory();
     final file = File(p.join(dir.path, 'cgms_export.csv'));
     await file.writeAsString(csv);
-    await Share.shareXFiles([XFile(file.path)], subject: l10n.exportSubject);
+    try {
+      await Share.shareXFiles([XFile(file.path)], subject: l10n.exportSubject);
+    } finally {
+      // Don't leave the export sitting in the temp dir.
+      if (file.existsSync()) {
+        try {
+          await file.delete();
+        } catch (_) {
+          /* best-effort cleanup */
+        }
+      }
+    }
   }
 
   Future<void> _setPin(BuildContext context, WidgetRef ref) async {
