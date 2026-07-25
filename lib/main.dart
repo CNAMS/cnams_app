@@ -6,7 +6,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cgms_app/core/l10n/generated/app_localizations.dart';
 import 'package:cgms_app/core/providers.dart';
 import 'package:cgms_app/core/settings/locale_controller.dart';
+import 'package:cgms_app/core/auth/auth_controller.dart';
 import 'package:cgms_app/features/auth/pin_unlock_screen.dart';
+import 'package:cgms_app/features/auth/sign_in_screen.dart';
 import 'package:cgms_app/features/home/home_screen.dart';
 import 'package:cgms_app/features/onboarding/language_screen.dart';
 import 'package:cgms_app/features/onboarding/splash_screen.dart';
@@ -74,7 +76,14 @@ class _AppFlow extends ConsumerWidget {
     final languageChosen = ref.watch(languageChosenProvider);
     if (!languageChosen) return const LanguageScreen();
 
-    return const _Gate();
+    // Signed out → sign in; signed in → the PIN gate + role shell.
+    final session = ref.watch(authControllerProvider);
+    return session.when(
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (_, __) => const SignInScreen(),
+      data: (s) => s == null ? const SignInScreen() : const _Gate(),
+    );
   }
 }
 
