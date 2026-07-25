@@ -53,6 +53,10 @@ class _ChildRegistrationScreenState
       initialDate: _dob ?? DateTime(now.year - 2, now.month),
       firstDate: DateTime(now.year - 6),
       lastDate: now,
+      // Open in type-the-date mode: reaching a birth month a year or two back by
+      // paging the calendar is painful, and rural DOBs are often typed anyway.
+      // The calendar toggle is still available in the dialog.
+      initialEntryMode: DatePickerEntryMode.input,
     );
     if (picked != null) setState(() => _dob = picked);
   }
