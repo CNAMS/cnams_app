@@ -48,6 +48,9 @@ dependencies:
   # Preferences (locale choice, etc.)
   shared_preferences: ^2.2.0
 
+  # Sync transport
+  http: ^1.2.0
+
   # Utilities
   uuid: ^4.4.0
   collection: ^1.18.0
