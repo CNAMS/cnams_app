@@ -17,7 +17,11 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
+          // No secure storage in a widget test: no PIN, so the gate opens.
+          pinIsSetProvider.overrideWith((ref) => false),
+        ],
         child: const CgmsApp(),
       ),
     );

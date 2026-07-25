@@ -13,7 +13,14 @@ import 'package:cgms_app/features/settings/settings_screen.dart';
 
 Widget _wrap(SharedPreferences prefs) {
   return ProviderScope(
-    overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+    overrides: [
+      sharedPreferencesProvider.overrideWithValue(prefs),
+      // Keep the Data & security section off the platform (secure storage / DB).
+      pinIsSetProvider.overrideWith((ref) => false),
+      outboxCountsProvider.overrideWith(
+        (ref) async => (pending: 0, deadLetter: 0),
+      ),
+    ],
     child: Consumer(
       builder: (context, ref, _) {
         final locale = ref.watch(localeControllerProvider);
