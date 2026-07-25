@@ -9,6 +9,11 @@
 > This document is the detailed, production-grade expansion of [`02-Mobile-App-Roadmap.md`](../02-Mobile-App-Roadmap.md).
 > The rough roadmap defines *what* each sprint delivers. This document defines *how* each phase is
 > built, gated, tested, and shipped, with concrete entry/exit criteria, risks, and definitions of done.
+>
+> **Companion docs:**
+> - Product brand + multi-role experience (landing page, role-based auth + Google OAuth, dashboards,
+>   theme) — **[ANKUR_EXPERIENCE_ROADMAP.md](ANKUR_EXPERIENCE_ROADMAP.md)** (the app is branded **Ankur**, अंकुर — "sprout").
+> - Everything still outstanding across all phases — **[LEFTOVER.md](LEFTOVER.md)**.
 
 ---
 
@@ -49,6 +54,19 @@ so downstream phases are never blocked by hardware.
 | **G3** | Field-usable build | P4 start | 2 AWWs (usability) |
 | **G4** | Security & export | P5 start | Security reviewer + AWW |
 | **G5** | Release readiness | Handover | Product owner |
+
+### Implementation status (living)
+
+| Phase | Status | Notes |
+|---|---|---|
+| **P0** Foundation | ✅ delivered | drift schema + DAOs, theme, Hindi-first l10n with NFR-16 lint, layering test, CI. |
+| **P1** Roster & data core | ✅ delivered | Repositories over DAOs, offline registration + consent, roster with search/overdue, **runtime Hindi⇄English switch** (persisted). |
+| **P2** Engine & mock capture | ✅ delivered (data drop-in pending) | Pure-Dart LMS engine + classification + boundary, mock BLE client, packet codec, full capture flow. **Gate G2 needs the official WHO tables dropped into `assets/who_reference/tables.json`** — it ships empty and fail-safe (everything reports *indeterminate*, oedema still forces SAM). |
+| **P3** Device & result UX | ✅ delivered (hardware + AWW session pending) | Child history hub + weight-for-age growth curve, parent card (PDF preview/share/print), real BLE client skeleton behind the interface. Real-hardware verification and the AWW usability session (Gate G3) still to do. |
+| **P4** Sync, security & export | 🚧 in progress | Outbox sync service (batch ≤50, 200/409 remove, 4xx dead-letter, 5xx/transport backoff, idempotent), PIN unlock (PBKDF2), CSV export in Poshan Tracker order, Settings Data & security section. **Remaining:** live server endpoint + workmanager scheduling, full SQLCipher wiring (structural seam in place), CSV column order AWW sign-off (Gate G4), 500-record kill-mid-batch field test. |
+
+> The z-score engine's numeric correctness is unit-tested against hand-computed LMS values; validation
+> against WHO Anthro (the golden corpus) is what closes Gate G2 once the official tables are loaded.
 
 ---
 
@@ -108,6 +126,8 @@ captured as a first-class, auditable record.
 - Consent-withdrawal path stub (wires to soft-delete + future server mirror).
 - Riverpod state architecture: repositories over DAOs, immutable view models.
 - Empty states and error messages in Hindi.
+- Settings screen with a **language switch (Hindi ⇄ English)**, applied live and persisted across
+  restarts (see the Localisation cross-cutting section).
 
 ### Entry criteria
 - G0 signed off; schema available.
@@ -117,6 +137,7 @@ captured as a first-class, auditable record.
 - [ ] Consent status and timestamp persisted and shown on the child record.
 - [ ] DOB precision selectable and stored; estimated DOBs visually flagged.
 - [ ] Repository + DAO unit tests cover create/update/soft-delete/search.
+- [ ] Language switch changes the app immediately and survives a restart.
 - [ ] Roster loads < 500 ms with 500 seeded children on the target device.
 
 ### Risks
@@ -320,7 +341,10 @@ printer queue.
 ## Cross-cutting: Localisation & Accessibility (all phases)
 
 - All user-facing strings in `hi.arb` from P0; lint fails the build on hardcoded text (`NFR-16`).
-- **Hindi first, English fallback** — default locale `hi`.
+- **Hindi first, English fallback** — default locale `hi` on first launch.
+- **Runtime language switch (Hindi ⇄ English)** available from Settings. Changing it re-renders the
+  whole app immediately and the choice is **persisted** (SharedPreferences) so it survives a restart.
+  Delivered in P1; the two language names are always shown in their own script (हिन्दी / English).
 - Devanagari vs Latin numerals decided **with the AWWs**, not the team (settle in W3–W6 interviews).
 - Minimum touch target 48 dp; base font 16 sp; honour system scaling.
 - Every colour-coded status also carries text or an icon.

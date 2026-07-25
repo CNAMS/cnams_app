@@ -12,7 +12,8 @@ import 'package:cgms_app/core/db/tables.dart';
 part 'children_dao.g.dart';
 
 @DriftAccessor(tables: [Children])
-class ChildrenDao extends DatabaseAccessor<AppDatabase> with _$ChildrenDaoMixin {
+class ChildrenDao extends DatabaseAccessor<AppDatabase>
+    with _$ChildrenDaoMixin {
   ChildrenDao(super.db);
 
   /// Insert or replace a child row.
@@ -36,8 +37,7 @@ class ChildrenDao extends DatabaseAccessor<AppDatabase> with _$ChildrenDaoMixin 
             (c) =>
                 c.centreId.equals(centreId) &
                 c.deleted.equals(false) &
-                (c.name.lower().like(like) |
-                    c.guardianName.lower().like(like)),
+                (c.name.lower().like(like) | c.guardianName.lower().like(like)),
           ))
         .get();
   }

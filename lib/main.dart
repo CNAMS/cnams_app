@@ -1,37 +1,105 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:cgms_app/core/l10n/generated/app_localizations.dart';
+import 'package:cgms_app/core/providers.dart';
+import 'package:cgms_app/core/settings/locale_controller.dart';
+import 'package:cgms_app/core/auth/auth_controller.dart';
+import 'package:cgms_app/features/auth/pin_unlock_screen.dart';
+import 'package:cgms_app/features/auth/sign_in_screen.dart';
+import 'package:cgms_app/features/onboarding/language_screen.dart';
+import 'package:cgms_app/features/onboarding/splash_screen.dart';
+import 'package:cgms_app/features/shell/role_shell.dart';
 import 'package:cgms_app/shared/theme/app_theme.dart';
 
 /// Application entry point.
 ///
-/// Hindi (`hi`) is the primary and default locale; English (`en`) is the
-/// fallback. See [docs/PRODUCTION_ROADMAP.md] phase P0.
-void main() {
-  runApp(const ProviderScope(child: CgmsApp()));
+/// Hindi (`hi`) is the default locale on first launch; the worker can switch to
+/// English from Settings and the choice persists. See
+/// docs/PRODUCTION_ROADMAP.md — Phase P0 and the Localisation section.
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final prefs = await SharedPreferences.getInstance();
+  runApp(
+    ProviderScope(
+      overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+      child: const CgmsApp(),
+    ),
+  );
 }
 
-class CgmsApp extends StatelessWidget {
+class CgmsApp extends ConsumerWidget {
   const CgmsApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final locale = ref.watch(localeControllerProvider);
+    final role = ref.watch(currentRoleProvider);
     return MaterialApp(
-      title: 'CGMS',
+      onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.light(),
-      // Hindi first, English fallback.
-      locale: const Locale('hi'),
-      supportedLocales: const [Locale('hi'), Locale('en')],
+      theme: AppTheme.forRole(role, Brightness.light),
+      darkTheme: AppTheme.forRole(role, Brightness.dark),
+      themeMode: ThemeMode.system,
+      locale: locale,
+      supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: const [
+        AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      home: const Scaffold(
-        body: Center(child: Text('CGMS — scaffold')),
-      ),
+      home: const _AppFlow(),
+    );
+  }
+}
+
+/// First-run flow: splash → choose language → the app (PIN gate + shell).
+/// Auth (EX2) will slot in between language and the gate.
+class _AppFlow extends ConsumerWidget {
+  const _AppFlow();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final splashShown = ref.watch(splashShownProvider);
+    if (!splashShown) {
+      return SplashScreen(
+        onDone: () => ref.read(splashShownProvider.notifier).state = true,
+      );
+    }
+
+    final languageChosen = ref.watch(languageChosenProvider);
+    if (!languageChosen) return const LanguageScreen();
+
+    // Signed out → sign in; signed in → the PIN gate + role shell.
+    final session = ref.watch(authControllerProvider);
+    return session.when(
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (_, __) => const SignInScreen(),
+      data: (s) => s == null ? const SignInScreen() : const _Gate(),
+    );
+  }
+}
+
+/// Shows the PIN unlock screen when a PIN is set and this session isn't unlocked
+/// yet; otherwise the app shell. When no PIN is set, the app is open.
+class _Gate extends ConsumerWidget {
+  const _Gate();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final pinSet = ref.watch(pinIsSetProvider);
+    final unlocked = ref.watch(sessionUnlockedProvider);
+
+    return pinSet.when(
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (_, __) => const RoleShell(),
+      data: (isSet) =>
+          (isSet && !unlocked) ? const PinUnlockScreen() : const RoleShell(),
     );
   }
 }
