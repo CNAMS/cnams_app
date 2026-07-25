@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cgms_app/core/l10n/generated/app_localizations.dart';
 import 'package:cgms_app/core/providers.dart';
 import 'package:cgms_app/core/settings/locale_controller.dart';
+import 'package:cgms_app/features/auth/pin_unlock_screen.dart';
 import 'package:cgms_app/features/home/home_screen.dart';
 import 'package:cgms_app/features/measure/result_demo_screen.dart';
 import 'package:cgms_app/features/roster/roster_screen.dart';
@@ -46,7 +47,27 @@ class CgmsApp extends ConsumerWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      home: const _AppShell(),
+      home: const _Gate(),
+    );
+  }
+}
+
+/// Shows the PIN unlock screen when a PIN is set and this session isn't unlocked
+/// yet; otherwise the app shell. When no PIN is set, the app is open.
+class _Gate extends ConsumerWidget {
+  const _Gate();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final pinSet = ref.watch(pinIsSetProvider);
+    final unlocked = ref.watch(sessionUnlockedProvider);
+
+    return pinSet.when(
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (_, __) => const _AppShell(),
+      data: (isSet) =>
+          (isSet && !unlocked) ? const PinUnlockScreen() : const _AppShell(),
     );
   }
 }
