@@ -9,12 +9,9 @@ import 'package:cgms_app/core/settings/locale_controller.dart';
 import 'package:cgms_app/core/auth/auth_controller.dart';
 import 'package:cgms_app/features/auth/pin_unlock_screen.dart';
 import 'package:cgms_app/features/auth/sign_in_screen.dart';
-import 'package:cgms_app/features/home/home_screen.dart';
 import 'package:cgms_app/features/onboarding/language_screen.dart';
 import 'package:cgms_app/features/onboarding/splash_screen.dart';
-import 'package:cgms_app/features/measure/result_demo_screen.dart';
-import 'package:cgms_app/features/roster/roster_screen.dart';
-import 'package:cgms_app/features/settings/settings_screen.dart';
+import 'package:cgms_app/features/shell/role_shell.dart';
 import 'package:cgms_app/shared/theme/app_theme.dart';
 
 /// Application entry point.
@@ -100,70 +97,9 @@ class _Gate extends ConsumerWidget {
     return pinSet.when(
       loading: () =>
           const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (_, __) => const _AppShell(),
+      error: (_, __) => const RoleShell(),
       data: (isSet) =>
-          (isSet && !unlocked) ? const PinUnlockScreen() : const _AppShell(),
-    );
-  }
-}
-
-/// Bottom-navigation host. Today it carries Home and a Result-banner demo; the
-/// full set (Roster / Centre / Settings) fills in as those features land.
-class _AppShell extends StatefulWidget {
-  const _AppShell();
-
-  @override
-  State<_AppShell> createState() => _AppShellState();
-}
-
-class _AppShellState extends State<_AppShell> {
-  int _index = 0;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    const pages = [
-      HomeScreen(),
-      RosterScreen(),
-      ResultDemoScreen(),
-      SettingsScreen(),
-    ];
-    final titles = [
-      l10n.navHome,
-      l10n.navRoster,
-      l10n.navResultDemo,
-      l10n.navSettings,
-    ];
-
-    return Scaffold(
-      appBar: AppBar(title: Text(titles[_index])),
-      body: pages[_index],
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _index,
-        onDestinationSelected: (i) => setState(() => _index = i),
-        destinations: [
-          NavigationDestination(
-            icon: const Icon(Icons.home_outlined),
-            selectedIcon: const Icon(Icons.home),
-            label: l10n.navHome,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.people_outline),
-            selectedIcon: const Icon(Icons.people),
-            label: l10n.navRoster,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.assignment_outlined),
-            selectedIcon: const Icon(Icons.assignment),
-            label: l10n.navResultDemo,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.settings_outlined),
-            selectedIcon: const Icon(Icons.settings),
-            label: l10n.navSettings,
-          ),
-        ],
-      ),
+          (isSet && !unlocked) ? const PinUnlockScreen() : const RoleShell(),
     );
   }
 }
