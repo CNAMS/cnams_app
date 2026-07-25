@@ -12,9 +12,11 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+import 'package:cgms_app/core/auth/auth_controller.dart';
 import 'package:cgms_app/core/l10n/generated/app_localizations.dart';
 import 'package:cgms_app/core/providers.dart';
 import 'package:cgms_app/core/settings/locale_controller.dart';
+import 'package:cgms_app/features/auth/role_display.dart';
 import 'package:cgms_app/features/export/csv_export.dart';
 
 class SettingsScreen extends ConsumerWidget {
@@ -63,10 +65,26 @@ class SettingsScreen extends ConsumerWidget {
     final controller = ref.read(localeControllerProvider.notifier);
     final counts = ref.watch(outboxCountsProvider);
     final pinSet = ref.watch(pinIsSetProvider).valueOrNull ?? false;
+    final role = ref.watch(currentRoleProvider);
 
     return SafeArea(
       child: ListView(
         children: [
+          // Account: who's signed in, and sign out.
+          ListTile(
+            leading: CircleAvatar(
+              backgroundColor: roleColor(role).withValues(alpha: 0.15),
+              child: Icon(roleIcon(role), color: roleColor(role)),
+            ),
+            title: Text(roleLabel(l10n, role)),
+            trailing: TextButton.icon(
+              onPressed: () =>
+                  ref.read(authControllerProvider.notifier).signOut(),
+              icon: const Icon(Icons.logout),
+              label: Text(l10n.signOut),
+            ),
+          ),
+          const Divider(),
           _SectionHeader(
             icon: Icons.language,
             title: l10n.settingsLanguage,
