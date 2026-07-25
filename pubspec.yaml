@@ -44,6 +44,7 @@ dependencies:
 
   # Security
   flutter_secure_storage: ^9.2.0
+  crypto: ^3.0.0
 
   # Preferences (locale choice, etc.)
   shared_preferences: ^2.2.0
