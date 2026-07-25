@@ -20,7 +20,7 @@ class PinUnlockScreen extends ConsumerStatefulWidget {
 
 class _PinUnlockScreenState extends ConsumerState<PinUnlockScreen> {
   final _pin = TextEditingController();
-  bool _error = false;
+  String? _errorMsg;
   bool _checking = false;
 
   @override
@@ -32,15 +32,18 @@ class _PinUnlockScreenState extends ConsumerState<PinUnlockScreen> {
   Future<void> _submit() async {
     setState(() {
       _checking = true;
-      _error = false;
+      _errorMsg = null;
     });
-    final ok = await ref.read(pinAuthProvider).verify(_pin.text.trim());
+    final l10n = AppLocalizations.of(context)!;
+    final result = await ref.read(pinAuthProvider).verify(_pin.text.trim());
     if (!mounted) return;
-    if (ok) {
+    if (result.ok) {
       ref.read(sessionUnlockedProvider.notifier).state = true;
     } else {
       setState(() {
-        _error = true;
+        _errorMsg = result.isLocked
+            ? l10n.pinLockedFor(result.lockedFor!.inSeconds)
+            : l10n.pinWrong;
         _checking = false;
         _pin.clear();
       });
@@ -77,7 +80,7 @@ class _PinUnlockScreenState extends ConsumerState<PinUnlockScreen> {
                   onSubmitted: (_) => _submit(),
                   decoration: InputDecoration(
                     counterText: '',
-                    errorText: _error ? l10n.pinWrong : null,
+                    errorText: _errorMsg,
                     border: const OutlineInputBorder(),
                   ),
                 ),
