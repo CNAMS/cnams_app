@@ -53,6 +53,42 @@ void main() {
       expect(s.role, AppRole.doctor);
       expect(s.method, AuthMethod.google);
     });
+
+    test('email+password creates on first use, then verifies', () async {
+      final api = MockAuthApi();
+      final created = await api.signInWithPassword(
+        'aww@example.com',
+        'secret123',
+        AppRole.aww,
+      );
+      expect(created.method, AuthMethod.password);
+
+      // Correct password signs into the same account.
+      final again = await api.signInWithPassword(
+        'aww@example.com',
+        'secret123',
+        AppRole.aww,
+      );
+      expect(again.userId, created.userId);
+
+      // Wrong password is rejected.
+      expect(
+        () => api.signInWithPassword('aww@example.com', 'nope', AppRole.aww),
+        throwsA(isA<AuthException>()),
+      );
+    });
+
+    test('email+password rejects bad email or short password', () {
+      final api = MockAuthApi();
+      expect(
+        () => api.signInWithPassword('notanemail', 'secret123', AppRole.aww),
+        throwsA(isA<AuthException>()),
+      );
+      expect(
+        () => api.signInWithPassword('a@b.com', '123', AppRole.aww),
+        throwsA(isA<AuthException>()),
+      );
+    });
   });
 
   group('AuthController', () {

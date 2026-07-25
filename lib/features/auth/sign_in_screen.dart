@@ -12,6 +12,7 @@ import 'package:cgms_app/core/auth/auth_controller.dart';
 import 'package:cgms_app/core/auth/auth_models.dart';
 import 'package:cgms_app/core/l10n/generated/app_localizations.dart';
 import 'package:cgms_app/features/auth/otp_screen.dart';
+import 'package:cgms_app/features/auth/password_screen.dart';
 import 'package:cgms_app/features/auth/role_display.dart';
 import 'package:cgms_app/features/onboarding/sprout_mark.dart';
 
@@ -29,6 +30,14 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => OtpScreen(channel: channel, role: _role),
+      ),
+    );
+  }
+
+  void _startPassword() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => PasswordScreen(role: _role),
       ),
     );
   }
@@ -96,6 +105,15 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 10),
+                OutlinedButton.icon(
+                  onPressed: _startPassword,
+                  icon: const Icon(Icons.password),
+                  label: Text(l10n.signInPassword),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size.fromHeight(48),
+                  ),
                 ),
                 const SizedBox(height: 18),
                 Text(

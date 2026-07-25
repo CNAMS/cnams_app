@@ -6,7 +6,7 @@ import 'dart:convert';
 
 import 'package:cgms_app/core/auth/app_role.dart';
 
-enum AuthMethod { google, phoneOtp, emailOtp, pin }
+enum AuthMethod { google, phoneOtp, emailOtp, password, pin }
 
 enum OtpChannel { phone, email }
 
