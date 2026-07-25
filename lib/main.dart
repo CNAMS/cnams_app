@@ -8,6 +8,8 @@ import 'package:cgms_app/core/providers.dart';
 import 'package:cgms_app/core/settings/locale_controller.dart';
 import 'package:cgms_app/features/auth/pin_unlock_screen.dart';
 import 'package:cgms_app/features/home/home_screen.dart';
+import 'package:cgms_app/features/onboarding/language_screen.dart';
+import 'package:cgms_app/features/onboarding/splash_screen.dart';
 import 'package:cgms_app/features/measure/result_demo_screen.dart';
 import 'package:cgms_app/features/roster/roster_screen.dart';
 import 'package:cgms_app/features/settings/settings_screen.dart';
@@ -50,8 +52,29 @@ class CgmsApp extends ConsumerWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      home: const _Gate(),
+      home: const _AppFlow(),
     );
+  }
+}
+
+/// First-run flow: splash → choose language → the app (PIN gate + shell).
+/// Auth (EX2) will slot in between language and the gate.
+class _AppFlow extends ConsumerWidget {
+  const _AppFlow();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final splashShown = ref.watch(splashShownProvider);
+    if (!splashShown) {
+      return SplashScreen(
+        onDone: () => ref.read(splashShownProvider.notifier).state = true,
+      );
+    }
+
+    final languageChosen = ref.watch(languageChosenProvider);
+    if (!languageChosen) return const LanguageScreen();
+
+    return const _Gate();
   }
 }
 

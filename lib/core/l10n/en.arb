@@ -62,6 +62,8 @@
   "withdrawConsent": "Withdraw consent",
   "withdrawConsentConfirm": "This child's record will be removed. Continue?",
   "childSaved": "Saved",
+  "chooseLanguage": "Choose your language",
+  "chooseLanguageHint": "You can change this later in Settings",
   "settingsLanguage": "Language",
   "settingsLanguageSubtitle": "Choose the app language",
   "languageHindi": "हिन्दी",

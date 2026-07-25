@@ -12,7 +12,7 @@ void main() {
   testWidgets('app boots in Hindi and can switch to the result demo', (
     tester,
   ) async {
-    SharedPreferences.setMockInitialValues({});
+    SharedPreferences.setMockInitialValues({'language_chosen': true});
     final prefs = await SharedPreferences.getInstance();
 
     await tester.pumpWidget(
@@ -21,6 +21,8 @@ void main() {
           sharedPreferencesProvider.overrideWithValue(prefs),
           // No secure storage in a widget test: no PIN, so the gate opens.
           pinIsSetProvider.overrideWith((ref) => false),
+          // Skip the splash animation and the language screen.
+          splashShownProvider.overrideWith((ref) => true),
         ],
         child: const CgmsApp(),
       ),

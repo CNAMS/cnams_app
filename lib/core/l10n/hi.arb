@@ -68,6 +68,8 @@
   "withdrawConsent": "सहमति वापस लें",
   "withdrawConsentConfirm": "इस बच्चे का रिकॉर्ड हटा दिया जाएगा। जारी रखें?",
   "childSaved": "सहेजा गया",
+  "chooseLanguage": "भाषा चुनें",
+  "chooseLanguageHint": "बाद में सेटिंग्स में बदल सकते हैं",
   "settingsLanguage": "भाषा",
   "settingsLanguageSubtitle": "ऐप की भाषा चुनें",
   "languageHindi": "हिन्दी",

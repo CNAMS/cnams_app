@@ -103,6 +103,17 @@ final sessionUnlockedProvider = StateProvider<bool>((ref) => false);
 /// navigation and guards). Defaults to AWW until sign-in (EX2) sets it.
 final currentRoleProvider = StateProvider<AppRole>((ref) => AppRole.aww);
 
+/// Whether the launch splash has finished this session (not persisted).
+/// Tests override this to skip the splash animation.
+final splashShownProvider = StateProvider<bool>((ref) => false);
+
+/// Whether the user has explicitly chosen a language (persisted). Until then the
+/// first-run flow shows the language screen.
+final languageChosenProvider = StateProvider<bool>(
+  (ref) =>
+      ref.watch(sharedPreferencesProvider).getBool('language_chosen') ?? false,
+);
+
 /// Outbox counts (pending backlog, dead letters) for Home/Settings. Refresh by
 /// invalidating after a sync or a new write.
 final outboxCountsProvider = FutureProvider<({int pending, int deadLetter})>(
