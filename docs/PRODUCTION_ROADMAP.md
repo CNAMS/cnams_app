@@ -57,7 +57,8 @@ so downstream phases are never blocked by hardware.
 | **P0** Foundation | ✅ delivered | drift schema + DAOs, theme, Hindi-first l10n with NFR-16 lint, layering test, CI. |
 | **P1** Roster & data core | ✅ delivered | Repositories over DAOs, offline registration + consent, roster with search/overdue, **runtime Hindi⇄English switch** (persisted). |
 | **P2** Engine & mock capture | ✅ delivered (data drop-in pending) | Pure-Dart LMS engine + classification + boundary, mock BLE client, packet codec, full capture flow. **Gate G2 needs the official WHO tables dropped into `assets/who_reference/tables.json`** — it ships empty and fail-safe (everything reports *indeterminate*, oedema still forces SAM). |
-| **P3** Device & result UX | 🚧 in progress | Child history hub + weight-for-age growth curve, parent card (PDF preview/share/print), real BLE client skeleton behind the interface. Usability session with AWWs still to do. |
+| **P3** Device & result UX | ✅ delivered (hardware + AWW session pending) | Child history hub + weight-for-age growth curve, parent card (PDF preview/share/print), real BLE client skeleton behind the interface. Real-hardware verification and the AWW usability session (Gate G3) still to do. |
+| **P4** Sync, security & export | 🚧 in progress | Outbox sync service (batch ≤50, 200/409 remove, 4xx dead-letter, 5xx/transport backoff, idempotent), PIN unlock (PBKDF2), CSV export in Poshan Tracker order, Settings Data & security section. **Remaining:** live server endpoint + workmanager scheduling, full SQLCipher wiring (structural seam in place), CSV column order AWW sign-off (Gate G4), 500-record kill-mid-batch field test. |
 
 > The z-score engine's numeric correctness is unit-tested against hand-computed LMS values; validation
 > against WHO Anthro (the golden corpus) is what closes Gate G2 once the official tables are loaded.
