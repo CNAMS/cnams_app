@@ -40,12 +40,28 @@ class AppDatabase extends _$AppDatabase {
 
 /// Opens the database file under the app's documents directory.
 ///
-/// [passphrase] is accepted now so the P4 SQLCipher work is a one-line change
-/// at the boundary; it is currently unused.
+/// When a [passphrase] is supplied the connection is keyed with SQLCipher via
+/// `PRAGMA key` before any other statement. The passphrase itself is derived
+/// from the worker's PIN and passed in after unlock.
+///
+/// Remaining P4 wiring (why this is a structural seam, not a finished feature):
+///   1. On Android, `open.overrideFor(...)` must point at the SQLCipher build
+///      from sqlcipher_flutter_libs so the encrypted `PRAGMA key` is honoured.
+///   2. The database must be opened AFTER PIN unlock, so the app composition
+///      order changes (appDatabaseProvider becomes keyed on the derived key).
+///   3. A migration path for any existing plaintext DB.
 QueryExecutor openConnection({String? passphrase}) {
   return LazyDatabase(() async {
     final dir = await getApplicationDocumentsDirectory();
     final file = File(p.join(dir.path, 'cgms.sqlite'));
-    return NativeDatabase.createInBackground(file);
+    return NativeDatabase.createInBackground(
+      file,
+      setup: (db) {
+        if (passphrase != null) {
+          // Must run before any other statement on the connection.
+          db.execute("PRAGMA key = '${passphrase.replaceAll("'", "''")}';");
+        }
+      },
+    );
   });
 }
