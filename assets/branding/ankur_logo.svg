@@ -1,0 +1,31 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ankur logo — a sprout">
+  <title>Ankur</title>
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#00897B"/>
+      <stop offset="1" stop-color="#00695C"/>
+    </linearGradient>
+    <linearGradient id="leaf" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7CC67B"/>
+      <stop offset="1" stop-color="#2E7D32"/>
+    </linearGradient>
+  </defs>
+
+  <!-- App tile -->
+  <rect x="8" y="8" width="240" height="240" rx="54" fill="url(#tile)"/>
+
+  <!-- Soil / growing ground -->
+  <path d="M78 182 Q128 168 178 182" stroke="#F4EEE2" stroke-width="9" stroke-linecap="round" opacity="0.85"/>
+
+  <!-- Stem -->
+  <path d="M128 182 C128 150 128 132 128 96" stroke="#F4EEE2" stroke-width="10" stroke-linecap="round"/>
+
+  <!-- Left leaf -->
+  <path d="M128 128 C104 132 82 118 74 92 C102 86 124 100 128 128 Z" fill="url(#leaf)"/>
+  <!-- Right leaf (larger, reaching up) -->
+  <path d="M128 116 C150 104 168 74 162 44 C132 52 118 82 128 116 Z" fill="url(#leaf)"/>
+
+  <!-- Leaf veins -->
+  <path d="M128 126 C112 122 98 112 86 98" stroke="#F4EEE2" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+  <path d="M128 114 C138 98 146 76 150 56" stroke="#F4EEE2" stroke-width="3" stroke-linecap="round" opacity="0.6"/>
+</svg>

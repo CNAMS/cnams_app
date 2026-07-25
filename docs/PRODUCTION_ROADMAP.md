@@ -9,6 +9,11 @@
 > This document is the detailed, production-grade expansion of [`02-Mobile-App-Roadmap.md`](../02-Mobile-App-Roadmap.md).
 > The rough roadmap defines *what* each sprint delivers. This document defines *how* each phase is
 > built, gated, tested, and shipped, with concrete entry/exit criteria, risks, and definitions of done.
+>
+> **Companion docs:**
+> - Product brand + multi-role experience (landing page, role-based auth + Google OAuth, dashboards,
+>   theme) — **[ANKUR_EXPERIENCE_ROADMAP.md](ANKUR_EXPERIENCE_ROADMAP.md)** (the app is branded **Ankur**, अंकुर — "sprout").
+> - Everything still outstanding across all phases — **[LEFTOVER.md](LEFTOVER.md)**.
 
 ---
 

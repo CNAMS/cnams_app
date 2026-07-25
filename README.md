@@ -1,9 +1,15 @@
-# CGMS Mobile App
+# Ankur — Child Growth Management System
+
+> **Ankur** (अंकुर, "sprout") — every child, growing well.
 
 Field data-capture application for the **Child Growth Management System (CGMS)** — the Track B mobile
 component used by Anganwadi Workers (AWWs) to measure, classify, and track child growth offline.
+Ankur is the product name and the planned multi-role experience layer (AWW · Supervisor · Doctor ·
+Parent · Admin) on top of this core.
 
 Parent project: https://github.com/PranavShukla2/cgms
+
+<img src="assets/branding/ankur_logo.svg" alt="Ankur logo" width="96" height="96" />
 
 ## What this app does
 
@@ -39,6 +45,9 @@ against the reference implementation.
 
 - [Rough roadmap](02-Mobile-App-Roadmap.md) — original sprint-level plan.
 - [Production roadmap](docs/PRODUCTION_ROADMAP.md) — detailed phase-wise production plan (P0–P6).
+- [Ankur experience roadmap](docs/ANKUR_EXPERIENCE_ROADMAP.md) — brand, landing, role-based auth +
+  Google OAuth, dashboards, theme (EX0–EX5).
+- [Leftover / backlog](docs/LEFTOVER.md) — everything still outstanding across all phases.
 
 ## Getting started
 
