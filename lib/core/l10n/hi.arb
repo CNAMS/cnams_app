@@ -1,8 +1,8 @@
 {
   "@@locale": "hi",
-  "appTitle": "बाल विकास प्रणाली",
+  "appTitle": "अंकुर",
   "@appTitle": {
-    "description": "Application title shown in the launcher and app bar."
+    "description": "Application title (product name Ankur) shown in the launcher and app bar."
   },
   "navHome": "मुख्य पृष्ठ",
   "navRoster": "बच्चों की सूची",

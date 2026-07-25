@@ -35,10 +35,13 @@ class CgmsApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final locale = ref.watch(localeControllerProvider);
+    final role = ref.watch(currentRoleProvider);
     return MaterialApp(
       onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.light(),
+      theme: AppTheme.forRole(role, Brightness.light),
+      darkTheme: AppTheme.forRole(role, Brightness.dark),
+      themeMode: ThemeMode.system,
       locale: locale,
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: const [

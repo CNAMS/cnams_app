@@ -6,6 +6,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:cgms_app/core/auth/app_role.dart';
 import 'package:cgms_app/core/auth/pin_auth.dart';
 import 'package:cgms_app/core/auth/secure_store.dart';
 import 'package:cgms_app/core/ble/device_client.dart';
@@ -97,6 +98,10 @@ final pinIsSetProvider = FutureProvider<bool>(
 
 /// Whether the app has been unlocked this session (true when no PIN is set).
 final sessionUnlockedProvider = StateProvider<bool>((ref) => false);
+
+/// The active user's role, which drives the per-role theme (and later, the
+/// navigation and guards). Defaults to AWW until sign-in (EX2) sets it.
+final currentRoleProvider = StateProvider<AppRole>((ref) => AppRole.aww);
 
 /// Outbox counts (pending backlog, dead letters) for Home/Settings. Refresh by
 /// invalidating after a sync or a new write.

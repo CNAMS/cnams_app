@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
 
+import 'package:cgms_app/core/auth/app_role.dart';
 import 'package:cgms_app/core/zscore/classification.dart';
 
-/// App theme, tuned for the field rather than the lab.
+/// Ankur's theme — one brand, tuned per role.
 ///
-/// The phone is used outdoors in a courtyard, often in bright sun, sometimes by
-/// a worker with colour-vision deficiency, and the parent card may be
-/// photocopied in greyscale. So: high contrast, a large base font, generous
+/// The AWW's phone is used outdoors in a courtyard, often in bright sun,
+/// sometimes by a worker with colour-vision deficiency, and the parent card may
+/// be photocopied in greyscale. So: high contrast, a large base font, generous
 /// touch targets, and classification colours that are always paired with a word
 /// and an icon — never colour alone.
 ///
-/// See docs/PRODUCTION_ROADMAP.md — cross-cutting accessibility.
+/// Each role gets a light and dark variant that swaps only the primary/surface
+/// (see [_RolePalette] and docs/ANKUR_EXPERIENCE_ROADMAP.md §2.1). The
+/// classification palette in [styleFor] never changes — it's clinical.
 class AppTheme {
   const AppTheme._();
 
@@ -20,20 +23,24 @@ class AppTheme {
   /// Base body text size; system text scaling is honoured on top of this.
   static const double baseFontSize = 16;
 
-  static ThemeData light() {
-    final scheme = ColorScheme.fromSeed(
-      seedColor: const Color(0xFF00695C),
-      brightness: Brightness.light,
-    );
+  /// The AWW field theme (unchanged) — kept as the default entry point.
+  static ThemeData light() => forRole(AppRole.aww, Brightness.light);
 
+  /// The themed [ThemeData] for a role and brightness.
+  static ThemeData forRole(AppRole role, Brightness brightness) {
+    final palette = _RolePalette.of(role);
+    final scheme = ColorScheme.fromSeed(
+      seedColor: palette.seed,
+      brightness: brightness,
+    );
     final base = ThemeData(useMaterial3: true, colorScheme: scheme);
 
+    final surface =
+        brightness == Brightness.light ? palette.lightSurface : null;
+
     return base.copyWith(
+      scaffoldBackgroundColor: surface,
       visualDensity: VisualDensity.comfortable,
-      textTheme: base.textTheme.apply(
-        bodyColor: const Color(0xFF1A1A1A),
-        displayColor: const Color(0xFF1A1A1A),
-      ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           minimumSize: const Size(minTouchTarget, minTouchTarget),
@@ -97,4 +104,30 @@ class ClassificationStyle {
   final Color color;
   final Color onColor;
   final IconData icon;
+}
+
+/// Per-role seed + light-surface tint. One brand, five tuned skins; only the
+/// primary and surface temperature change (roadmap §2.1). The AWW palette is the
+/// original field theme.
+class _RolePalette {
+  const _RolePalette(this.seed, this.lightSurface);
+
+  final Color seed;
+  final Color lightSurface;
+
+  static _RolePalette of(AppRole role) {
+    switch (role) {
+      case AppRole.aww:
+        return const _RolePalette(Color(0xFF00695C), Color(0xFFFBF8F1));
+      case AppRole.supervisor:
+        return const _RolePalette(Color(0xFF2E7D32), Color(0xFFF6F8F3));
+      case AppRole.doctor:
+        return const _RolePalette(Color(0xFF1565C0), Color(0xFFF5F8FC));
+      case AppRole.parent:
+        return const _RolePalette(Color(0xFFE68A00), Color(0xFFFDF7EE));
+      case AppRole.admin:
+        // A light "console" — slate/indigo on cool grey, deliberately not dark.
+        return const _RolePalette(Color(0xFF4B5570), Color(0xFFEEF1F5));
+    }
+  }
 }
