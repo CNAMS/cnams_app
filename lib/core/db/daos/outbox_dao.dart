@@ -18,11 +18,16 @@ class OutboxDao extends DatabaseAccessor<AppDatabase> with _$OutboxDaoMixin {
 
   static const int batchSize = 50;
 
+  /// After this many failed attempts a row is a dead letter: it's kept for the
+  /// record but no longer retried, and is surfaced in Settings for an operator.
+  static const int maxAttempts = 8;
+
   Future<void> enqueue(OutboxCompanion entry) => into(outbox).insert(entry);
 
-  /// Oldest-first batch to attempt next.
+  /// Oldest-first batch to attempt next, excluding dead letters.
   Future<List<OutboxData>> nextBatch() {
     return (select(outbox)
+          ..where((o) => o.attempts.isSmallerThanValue(maxAttempts))
           ..orderBy([(o) => OrderingTerm(expression: o.queuedAt)])
           ..limit(batchSize))
         .get();
@@ -40,10 +45,24 @@ class OutboxDao extends DatabaseAccessor<AppDatabase> with _$OutboxDaoMixin {
     );
   }
 
-  /// Backlog count shown on Home and Settings.
-  Future<int> pendingCount() async {
+  /// Force a row to dead-letter immediately (e.g. a permanent 4xx rejection).
+  Future<void> markDeadLetter(int id, String error) =>
+      markFailed(id, maxAttempts, error);
+
+  Future<int> _countWhere(
+      Expression<bool> Function($OutboxTable) filter) async {
     final count = countAll();
-    final row = await (selectOnly(outbox)..addColumns([count])).getSingle();
+    final query = selectOnly(outbox)..addColumns([count]);
+    query.where(filter(outbox));
+    final row = await query.getSingle();
     return row.read(count) ?? 0;
   }
+
+  /// Rows still waiting to sync (not yet dead-lettered) — the backlog badge.
+  Future<int> pendingCount() =>
+      _countWhere((o) => o.attempts.isSmallerThanValue(maxAttempts));
+
+  /// Rows that have exhausted their retries — shown in Settings.
+  Future<int> deadLetterCount() =>
+      _countWhere((o) => o.attempts.isBiggerOrEqualValue(maxAttempts));
 }
