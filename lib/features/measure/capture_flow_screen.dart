@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:cgms_app/core/app_info.dart';
 import 'package:cgms_app/core/auth/auth_controller.dart';
 import 'package:cgms_app/core/ble/device_client.dart';
 import 'package:cgms_app/core/db/app_database.dart';
@@ -17,8 +18,6 @@ import 'package:cgms_app/core/l10n/generated/app_localizations.dart';
 import 'package:cgms_app/core/providers.dart';
 import 'package:cgms_app/features/measure/capture_controller.dart';
 import 'package:cgms_app/features/measure/result_view.dart';
-
-const String _appVersion = '0.1.0';
 
 class CaptureFlowScreen extends ConsumerStatefulWidget {
   const CaptureFlowScreen({required this.child, super.key});
@@ -59,7 +58,7 @@ class _CaptureFlowScreenState extends ConsumerState<CaptureFlowScreen> {
       engine: engine,
       repository: ref.read(measurementRepositoryProvider),
       workerId: workerId,
-      appVersion: _appVersion,
+      appVersion: appVersion,
       deviceSerial: _device.deviceSerial,
     );
   }
