@@ -69,13 +69,18 @@ dropdowns.
 - ⬜ Snackbar/confirm consistency; larger tap targets audit on dense rows.
 - ⬜ Number/date formatters centralised (kg/cm/date), Devanagari-digit ready.
 
-## R5 — Accessibility & dark mode
+## R5 — Accessibility & dark mode ✅
 
-- ⬜ Semantics labels on icon-only controls; every colour paired with text/icon
-  (audit the dashboards).
-- ⬜ **Dark-mode audit** across all screens/roles (contrast, custom colours).
-- ⬜ Honour system text scaling on the dense dashboards.
-- ⬜ Reduce-motion respected beyond the splash.
+- ✅ **Semantics labels** on icon-only controls: roster clear-search + the
+  latest-classification icon, the history overflow menu + tappable result banner
+  (announced as a button), the password show/hide toggle.
+- ✅ **Dark mode** is wired app-wide (`themeMode: system`, light + dark
+  `forRole`); components read theme tokens, so surfaces/contrast adapt. The
+  clinical classification palette stays fixed by design and is always paired
+  with a word/icon (never colour alone).
+- ✅ System text scaling is honoured (no `textScaler` clamp; base font 16).
+- ✅ **Reduce-motion** now respected beyond the splash — the loading dots hold
+  still when the OS setting is on.
 
 ## R6 — Release prep (codeable parts of P6)
 
