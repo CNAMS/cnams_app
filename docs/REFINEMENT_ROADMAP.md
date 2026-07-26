@@ -45,11 +45,15 @@ dropdowns.
   child detail with a confirm dialog (soft-delete + queued server delete).
 - ⬜ Child detail header (name, age, sex, consent status, ICDS id).
 
-## R3 — The Result screen as a first-class screen
+## R3 — The Result screen as a first-class screen ✅
 
-- ⬜ Extract the capture result into a reusable, polished **Result screen**
-  (colour band + word first, z-scores below, referral advised) used by both the
-  capture flow and history, with a **raise-referral** call to action (feeds R1).
+- ✅ Extracted the capture result into a reusable, polished **Result view**
+  (`ResultView`): colour band + word first, the three z-scores below (tabular
+  figures), a referral-advised note only for SAM/MAM. The capture flow embeds it
+  with a Save footer; the history embeds it (via `ResultScreen`) with a
+  **raise-referral** CTA that feeds the R1 referral flow.
+- ✅ The history's latest-classification banner is tappable and opens the full
+  `ResultScreen` for that measurement.
 
 ## R4 — UI / frontend polish (the small stuff)
 
