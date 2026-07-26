@@ -15,6 +15,7 @@ import 'package:cgms_app/features/history/growth_chart.dart';
 import 'package:cgms_app/features/history/growth_series.dart';
 import 'package:cgms_app/features/history/parent_card_screen.dart';
 import 'package:cgms_app/features/measure/capture_flow_screen.dart';
+import 'package:cgms_app/features/measure/result_view.dart';
 import 'package:cgms_app/features/referral/referral_ui.dart';
 import 'package:cgms_app/features/roster/child_registration_screen.dart';
 import 'package:cgms_app/shared/theme/app_theme.dart';
@@ -162,6 +163,11 @@ class ChildHistoryScreen extends ConsumerWidget {
               _LatestBanner(
                 classification: latestClass,
                 label: _label(l10n, latestClass),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => ResultScreen(measurement: latest),
+                  ),
+                ),
               ),
               // Referral is advised for SAM/MAM — the worker acts on it.
               if (latestClass == GrowthClass.sam ||
@@ -205,30 +211,44 @@ class ChildHistoryScreen extends ConsumerWidget {
 }
 
 class _LatestBanner extends StatelessWidget {
-  const _LatestBanner({required this.classification, required this.label});
+  const _LatestBanner({
+    required this.classification,
+    required this.label,
+    this.onTap,
+  });
 
   final GrowthClass classification;
   final String label;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final style = AppTheme.styleFor(classification);
-    return Container(
+    return Material(
       color: style.color,
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-      child: Row(
-        children: [
-          Icon(style.icon, color: style.onColor),
-          const SizedBox(width: 12),
-          Text(
-            label,
-            style: TextStyle(
-              color: style.onColor,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+          child: Row(
+            children: [
+              Icon(style.icon, color: style.onColor),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    color: style.onColor,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              if (onTap != null)
+                Icon(Icons.chevron_right, color: style.onColor),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
