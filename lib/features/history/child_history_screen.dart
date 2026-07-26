@@ -16,6 +16,7 @@ import 'package:cgms_app/features/history/growth_series.dart';
 import 'package:cgms_app/features/history/parent_card_screen.dart';
 import 'package:cgms_app/features/measure/capture_flow_screen.dart';
 import 'package:cgms_app/features/referral/referral_ui.dart';
+import 'package:cgms_app/features/roster/child_registration_screen.dart';
 import 'package:cgms_app/shared/theme/app_theme.dart';
 
 class ChildHistoryScreen extends ConsumerWidget {
@@ -35,6 +36,37 @@ class ChildHistoryScreen extends ConsumerWidget {
         GrowthClass.overweight => l10n.resultOverweight,
         GrowthClass.indeterminate => l10n.resultIndeterminate,
       };
+
+  // Consent-withdrawal path: confirm, then soft-delete + queue a server delete,
+  // and leave the screen (the child drops off the roster).
+  Future<void> _withdrawConsent(
+    BuildContext context,
+    WidgetRef ref,
+    Child child,
+  ) async {
+    final l10n = AppLocalizations.of(context)!;
+    final navigator = Navigator.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text(l10n.withdrawConsent),
+        content: Text(l10n.withdrawConsentConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(l10n.withdrawConsent),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    await ref.read(childRepositoryProvider).withdrawConsent(child.id);
+    navigator.pop();
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -68,6 +100,29 @@ class ChildHistoryScreen extends ConsumerWidget {
                 );
               },
             ),
+          IconButton(
+            tooltip: l10n.editTitle,
+            icon: const Icon(Icons.edit_outlined),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => ChildRegistrationScreen(
+                  centreId: child.centreId,
+                  existing: child,
+                ),
+              ),
+            ),
+          ),
+          PopupMenuButton<String>(
+            onSelected: (v) {
+              if (v == 'withdraw') _withdrawConsent(context, ref, child);
+            },
+            itemBuilder: (_) => [
+              PopupMenuItem(
+                value: 'withdraw',
+                child: Text(l10n.withdrawConsent),
+              ),
+            ],
+          ),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(

@@ -1,22 +1,30 @@
-// Child registration + consent capture (FR-APP-15).
+// Child registration + consent capture (FR-APP-15), and editing (R2).
 //
-// Works fully offline: on save it calls ChildRepository.registerChild, which
-// writes locally and queues the record for sync. The DOB-precision control is
-// deliberately prominent, and choosing "estimated" surfaces a warning, because
-// an approximate DOB propagates a large error into WAZ/HAZ and that must be
-// visible rather than hidden. Phase P1.
+// Works fully offline: on save it calls ChildRepository.registerChild (create)
+// or updateChild (edit), which write locally and queue the record for sync. The
+// DOB-precision control is deliberately prominent, and choosing "estimated"
+// surfaces a warning, because an approximate DOB propagates a large error into
+// WAZ/HAZ and that must be visible rather than hidden.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:cgms_app/core/data/child_repository.dart';
+import 'package:cgms_app/core/db/app_database.dart';
 import 'package:cgms_app/core/l10n/generated/app_localizations.dart';
 import 'package:cgms_app/core/providers.dart';
 
 class ChildRegistrationScreen extends ConsumerStatefulWidget {
-  const ChildRegistrationScreen({required this.centreId, super.key});
+  const ChildRegistrationScreen({
+    required this.centreId,
+    this.existing,
+    super.key,
+  });
 
   final String centreId;
+
+  /// When non-null, the screen edits this child instead of creating one.
+  final Child? existing;
 
   @override
   ConsumerState<ChildRegistrationScreen> createState() =>
@@ -41,6 +49,26 @@ class _ChildRegistrationScreenState
   DobPrecision _dobPrecision = DobPrecision.exact;
   ConsentStatus _consent = ConsentStatus.given;
   bool _saving = false;
+
+  bool get _isEditing => widget.existing != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final c = widget.existing;
+    if (c != null) {
+      _name.text = c.name;
+      _guardian.text = c.guardianName ?? '';
+      _icdsId.text = c.icdsId ?? '';
+      _consentFormRef.text = c.consentFormRef ?? '';
+      _sex = ChildSex.fromDb(c.sex);
+      _year = c.dob.year;
+      _month = c.dob.month;
+      _day = c.dob.day;
+      _dobPrecision = DobPrecision.fromDb(c.dobPrecision);
+      _consent = ConsentStatus.fromDb(c.consentStatus);
+    }
+  }
 
   DateTime? get _dob {
     if (_year == null || _month == null) return null;
@@ -71,18 +99,33 @@ class _ChildRegistrationScreenState
 
     setState(() => _saving = true);
     final now = DateTime.now();
-    await ref.read(childRepositoryProvider).registerChild(
-          centreId: widget.centreId,
-          name: _name.text.trim(),
-          sex: _sex!,
-          dob: _dob!,
-          dobPrecision: _dobPrecision,
-          consentStatus: _consent,
-          guardianName: _emptyToNull(_guardian.text),
-          icdsId: _emptyToNull(_icdsId.text),
-          consentFormRef: _emptyToNull(_consentFormRef.text),
-          consentRecordedAt: _consent == ConsentStatus.given ? now : null,
-        );
+    final repo = ref.read(childRepositoryProvider);
+    if (_isEditing) {
+      await repo.updateChild(
+        widget.existing!,
+        name: _name.text.trim(),
+        sex: _sex,
+        dob: _dob,
+        dobPrecision: _dobPrecision,
+        guardianName: _emptyToNull(_guardian.text),
+        icdsId: _emptyToNull(_icdsId.text),
+        consentStatus: _consent,
+        consentFormRef: _emptyToNull(_consentFormRef.text),
+      );
+    } else {
+      await repo.registerChild(
+        centreId: widget.centreId,
+        name: _name.text.trim(),
+        sex: _sex!,
+        dob: _dob!,
+        dobPrecision: _dobPrecision,
+        consentStatus: _consent,
+        guardianName: _emptyToNull(_guardian.text),
+        icdsId: _emptyToNull(_icdsId.text),
+        consentFormRef: _emptyToNull(_consentFormRef.text),
+        consentRecordedAt: _consent == ConsentStatus.given ? now : null,
+      );
+    }
 
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -98,7 +141,9 @@ class _ChildRegistrationScreenState
     final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.registerTitle)),
+      appBar: AppBar(
+        title: Text(_isEditing ? l10n.editTitle : l10n.registerTitle),
+      ),
       body: SafeArea(
         child: Form(
           key: _formKey,
