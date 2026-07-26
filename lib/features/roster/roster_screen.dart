@@ -17,6 +17,7 @@ import 'package:cgms_app/features/measure/result_view.dart' show growthClassLabe
 import 'package:cgms_app/features/roster/child_registration_screen.dart';
 import 'package:cgms_app/shared/theme/app_theme.dart';
 import 'package:cgms_app/shared/widgets/empty_state.dart';
+import 'package:cgms_app/shared/widgets/error_view.dart';
 
 /// How the roster is ordered. Overdue/flagged-first put the children who need
 /// attention at the top; name is the calm default.
@@ -142,8 +143,9 @@ class _RosterScreenState extends ConsumerState<RosterScreen> {
             Expanded(
               child: roster.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, _) => Center(
-                  child: Text('$e'), // i18n-ignore: diagnostic, not UI copy
+                error: (e, _) => ErrorView(
+                  error: e,
+                  onRetry: () => ref.invalidate(rosterProvider),
                 ),
                 data: (all) {
                   final entries = _filterAndSort(all);

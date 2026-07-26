@@ -14,6 +14,7 @@ import 'package:cgms_app/core/zscore/classification.dart';
 import 'package:cgms_app/features/dashboard/dashboard_widgets.dart';
 import 'package:cgms_app/features/history/child_history_screen.dart';
 import 'package:cgms_app/shared/theme/app_theme.dart';
+import 'package:cgms_app/shared/widgets/error_view.dart';
 
 class CentreScreen extends ConsumerWidget {
   const CentreScreen({super.key});
@@ -27,7 +28,10 @@ class CentreScreen extends ConsumerWidget {
     return SafeArea(
       child: roster.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('$e')), // i18n-ignore: diagnostic
+        error: (e, _) => ErrorView(
+          error: e,
+          onRetry: () => ref.invalidate(rosterProvider),
+        ),
         data: (entries) {
           final flagged = entries.where((e) => e.isFlagged).toList();
           final overdue = entries.where((e) => e.isOverdue).toList();

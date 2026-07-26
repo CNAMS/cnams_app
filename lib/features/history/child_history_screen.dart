@@ -20,6 +20,7 @@ import 'package:cgms_app/features/referral/referral_ui.dart';
 import 'package:cgms_app/features/roster/child_registration_screen.dart';
 import 'package:cgms_app/shared/theme/app_theme.dart';
 import 'package:cgms_app/shared/widgets/empty_state.dart';
+import 'package:cgms_app/shared/widgets/error_view.dart';
 
 class ChildHistoryScreen extends ConsumerWidget {
   const ChildHistoryScreen({required this.child, super.key});
@@ -139,7 +140,10 @@ class ChildHistoryScreen extends ConsumerWidget {
       ),
       body: measurements.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('$e')), // i18n-ignore: diagnostic
+        error: (e, _) => ErrorView(
+          error: e,
+          onRetry: () => ref.invalidate(measurementsProvider(child.id)),
+        ),
         data: (rows) {
           if (rows.isEmpty) {
             return EmptyState(

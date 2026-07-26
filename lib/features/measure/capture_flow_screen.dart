@@ -18,6 +18,7 @@ import 'package:cgms_app/core/l10n/generated/app_localizations.dart';
 import 'package:cgms_app/core/providers.dart';
 import 'package:cgms_app/features/measure/capture_controller.dart';
 import 'package:cgms_app/features/measure/result_view.dart';
+import 'package:cgms_app/shared/widgets/error_view.dart';
 
 class CaptureFlowScreen extends ConsumerStatefulWidget {
   const CaptureFlowScreen({required this.child, super.key});
@@ -76,7 +77,10 @@ class _CaptureFlowScreenState extends ConsumerState<CaptureFlowScreen> {
       ),
       body: engine.when(
         loading: () => _Connecting(message: l10n.captureConnecting),
-        error: (e, _) => Center(child: Text('$e')), // i18n-ignore: diagnostic
+        error: (e, _) => ErrorView(
+          error: e,
+          onRetry: () => ref.invalidate(zscoreEngineProvider),
+        ),
         data: (_) {
           final controller = _ensureController();
           _measuredLying =
