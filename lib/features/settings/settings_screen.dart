@@ -18,6 +18,7 @@ import 'package:cgms_app/core/providers.dart';
 import 'package:cgms_app/core/settings/locale_controller.dart';
 import 'package:cgms_app/features/auth/role_display.dart';
 import 'package:cgms_app/features/export/csv_export.dart';
+import 'package:cgms_app/features/settings/about_screen.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -145,6 +146,10 @@ class SettingsScreen extends ConsumerWidget {
             leading: const Icon(Icons.info_outline),
             title: Text(l10n.settingsAbout),
             subtitle: Text(l10n.settingsAboutSubtitle),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (_) => const AboutScreen()),
+            ),
           ),
         ],
       ),
