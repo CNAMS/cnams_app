@@ -55,13 +55,15 @@ dropdowns.
 - ✅ The history's latest-classification banner is tappable and opens the full
   `ResultScreen` for that measurement.
 
-## R4 — UI / frontend polish (the small stuff)
+## R4 — UI / frontend polish (the small stuff) ✅ (core items)
 
-- ⬜ **About** screen — app version, a proper **licenses** page (`showLicensePage`).
-- ⬜ **Empty states** everywhere they're missing (measurements list, referrals,
-  centre view, dashboards) with a friendly sprout + one line.
-- ⬜ **Roster**: sort (name / overdue), a latest-result badge on each tile,
-  pull-to-refresh, search field clear button.
+- ✅ **About** screen — Ankur mark, product name, tagline, app version (from a
+  shared `app_info` constant), and a proper **licenses** page (`showLicensePage`).
+- ✅ **Shared `EmptyState`** (sprout + one line + optional CTA); wired into the
+  roster (add-child CTA) and history (take-measurement CTA).
+- ✅ **Roster**: sort menu (name / overdue-first / flagged-first), a latest-result
+  classification badge (colour + icon) on each tile, pull-to-refresh, and a
+  search-field clear button.
 - ⬜ Consistent **loading** and **error** states across the async screens.
 - ⬜ Optional **onboarding intro** slides after language (EX1 nicety).
 - ⬜ Snackbar/confirm consistency; larger tap targets audit on dense rows.
