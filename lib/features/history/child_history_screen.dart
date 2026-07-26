@@ -115,6 +115,7 @@ class ChildHistoryScreen extends ConsumerWidget {
             ),
           ),
           PopupMenuButton<String>(
+            tooltip: l10n.a11yMoreActions,
             onSelected: (v) {
               if (v == 'withdraw') _withdrawConsent(context, ref, child);
             },
@@ -236,29 +237,36 @@ class _LatestBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final style = AppTheme.styleFor(classification);
+    final l10n = AppLocalizations.of(context)!;
     return Material(
       color: style.color,
       child: InkWell(
         onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-          child: Row(
-            children: [
-              Icon(style.icon, color: style.onColor),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    color: style.onColor,
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
+        // Icon-only chevron aside, the row reads its label; when tappable it's a
+        // button that opens the full result, so say so for screen readers.
+        child: Semantics(
+          button: onTap != null,
+          label: onTap == null ? label : '$label, ${l10n.a11yViewResult}',
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+            child: Row(
+              children: [
+                Icon(style.icon, color: style.onColor),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      color: style.onColor,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-              ),
-              if (onTap != null)
-                Icon(Icons.chevron_right, color: style.onColor),
-            ],
+                if (onTap != null)
+                  Icon(Icons.chevron_right, color: style.onColor),
+              ],
+            ),
           ),
         ),
       ),

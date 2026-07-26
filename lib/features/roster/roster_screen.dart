@@ -13,6 +13,7 @@ import 'package:cgms_app/core/l10n/generated/app_localizations.dart';
 import 'package:cgms_app/core/providers.dart';
 import 'package:cgms_app/core/zscore/classification.dart';
 import 'package:cgms_app/features/history/child_history_screen.dart';
+import 'package:cgms_app/features/measure/result_view.dart' show growthClassLabel;
 import 'package:cgms_app/features/roster/child_registration_screen.dart';
 import 'package:cgms_app/shared/theme/app_theme.dart';
 import 'package:cgms_app/shared/widgets/empty_state.dart';
@@ -109,7 +110,7 @@ class _RosterScreenState extends ConsumerState<RosterScreen> {
                       ? null
                       : IconButton(
                           icon: const Icon(Icons.clear),
-                          tooltip: l10n.cancel,
+                          tooltip: l10n.a11yClearSearch,
                           onPressed: () {
                             _searchController.clear();
                             setState(() => _query = '');
@@ -258,11 +259,15 @@ class _RosterTile extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           // The latest classification, shown as colour + icon (never colour
-          // alone) so a flagged child reads at a glance from the list.
+          // alone) so a flagged child reads at a glance from the list. The
+          // icon carries a semantics label so it isn't silent to a reader.
           if (lastClass != null && lastClass != GrowthClass.indeterminate)
-            Icon(
-              AppTheme.styleFor(lastClass).icon,
-              color: AppTheme.styleFor(lastClass).color,
+            Semantics(
+              label: growthClassLabel(l10n, lastClass),
+              child: Icon(
+                AppTheme.styleFor(lastClass).icon,
+                color: AppTheme.styleFor(lastClass).color,
+              ),
             ),
           if (entry.isOverdue) ...[
             const SizedBox(width: 8),
