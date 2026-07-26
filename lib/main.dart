@@ -21,6 +21,12 @@ import 'package:cgms_app/shared/theme/app_theme.dart';
 /// docs/PRODUCTION_ROADMAP.md — Phase P0 and the Localisation section.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Top-level error boundary: replace Flutter's raw red error box (which shows
+  // exception text to the worker) with a calm, self-contained screen. The real
+  // error still goes to the logs via the default FlutterError handler.
+  ErrorWidget.builder = (details) => const _FriendlyErrorBox();
+
   final prefs = await SharedPreferences.getInstance();
   runApp(
     ProviderScope(
@@ -28,6 +34,50 @@ Future<void> main() async {
       child: const CgmsApp(),
     ),
   );
+}
+
+/// A last-resort error screen shown when a widget throws during build. It cannot
+/// assume a Localizations/Material ancestor (the failure may be above the app),
+/// so it carries its own Directionality and shows the message bilingually.
+class _FriendlyErrorBox extends StatelessWidget {
+  const _FriendlyErrorBox();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Directionality(
+      textDirection: TextDirection.ltr,
+      child: ColoredBox(
+        color: Color(0xFFFBF8F1),
+        child: Center(
+          child: Padding(
+            padding: EdgeInsets.all(32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.error_outline, size: 56, color: Color(0xFFC62828)),
+                SizedBox(height: 16),
+                Text(
+                  'कुछ गड़बड़ हो गई', // i18n-ignore: pre-localization error boundary
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1A1A1A),
+                  ),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  'Something went wrong. Please reopen the app.', // i18n-ignore: error boundary
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 15, color: Color(0xFF4A4A4A)),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class CgmsApp extends ConsumerWidget {
