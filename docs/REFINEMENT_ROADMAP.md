@@ -82,15 +82,18 @@ dropdowns.
 - ✅ **Reduce-motion** now respected beyond the splash — the loading dots hold
   still when the OS setting is on.
 
-## R6 — Release prep (codeable parts of P6)
+## R6 — Release prep (codeable parts of P6) ✅
 
-- ⬜ **All error/empty copy in Hindi** (+ English), no raw diagnostic text on
-  user-facing paths.
-- ⬜ A top-level **error boundary** so an unexpected exception shows a friendly
-  screen, not a red box.
-- ⬜ **Release build** config notes (signing placeholder, `--release` APK from CI).
-- ⬜ Draft the **Hindi user-manual** sections (install, sign-in, register, measure,
-  result, sync).
+- ✅ **All error/empty copy in Hindi** (+ English): a shared `ErrorView` (friendly
+  message, optional retry) replaces every `Text('$e')` on the roster, history,
+  centre and capture screens — the raw exception goes to the log, never the UI.
+- ✅ A top-level **error boundary** (`ErrorWidget.builder`) shows a calm,
+  self-contained bilingual screen instead of Flutter's red box.
+- ✅ **Release build** config notes — [RELEASE.md](RELEASE.md) (versioning,
+  signing placeholder, APK/AAB/IPA, encryption + endpoint seams, pre-release
+  checklist).
+- ✅ **Hindi user-manual** draft — [MANUAL_HI.md](MANUAL_HI.md) (install, language,
+  sign-in, register, measure, result, centre, sync, sign-out, troubleshooting).
 - 🔗 2-week zero-crash field window, store release, crash telemetry (needs backend).
 
 ---
