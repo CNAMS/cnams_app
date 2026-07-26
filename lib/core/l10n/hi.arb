@@ -13,6 +13,7 @@
   "resultSam": "गंभीर कुपोषण (SAM)",
   "resultOverweight": "अधिक वजन",
   "resultIndeterminate": "अनिश्चित",
+  "resultTitle": "परिणाम",
   "referralAdvised": "इस बच्चे को ANM को दिखाने की सलाह दी जाती है",
   "@referralAdvised": {
     "description": "CON-5: referral is advised, phrased as advice, not an instruction."

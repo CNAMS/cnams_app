@@ -10,6 +10,7 @@
   "resultSam": "Severe malnutrition (SAM)",
   "resultOverweight": "Overweight",
   "resultIndeterminate": "Indeterminate",
+  "resultTitle": "Result",
   "referralAdvised": "Showing this child to the ANM is advised",
   "consentGiven": "Consent given",
   "consentWithdrawn": "Consent withdrawn",
