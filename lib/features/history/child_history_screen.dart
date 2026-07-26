@@ -15,6 +15,7 @@ import 'package:cgms_app/features/history/growth_chart.dart';
 import 'package:cgms_app/features/history/growth_series.dart';
 import 'package:cgms_app/features/history/parent_card_screen.dart';
 import 'package:cgms_app/features/measure/capture_flow_screen.dart';
+import 'package:cgms_app/features/referral/referral_ui.dart';
 import 'package:cgms_app/shared/theme/app_theme.dart';
 
 class ChildHistoryScreen extends ConsumerWidget {
@@ -107,6 +108,17 @@ class ChildHistoryScreen extends ConsumerWidget {
                 classification: latestClass,
                 label: _label(l10n, latestClass),
               ),
+              // Referral is advised for SAM/MAM — the worker acts on it.
+              if (latestClass == GrowthClass.sam ||
+                  latestClass == GrowthClass.mam)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  child: FilledButton.tonalIcon(
+                    onPressed: () => raiseReferral(context, ref, latest.id),
+                    icon: const Icon(Icons.assignment_ind_outlined),
+                    label: Text(l10n.referralRaise),
+                  ),
+                ),
               _Section(title: l10n.historyGrowthCurve),
               SizedBox(
                 height: 260,
@@ -119,6 +131,8 @@ class ChildHistoryScreen extends ConsumerWidget {
                   ),
                 ),
               ),
+              _Section(title: l10n.referralsSection),
+              ReferralsList(childId: child.id),
               _Section(title: l10n.historyPreviousVisits),
               for (final m in rows)
                 _VisitTile(

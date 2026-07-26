@@ -63,6 +63,9 @@ void main() {
           referenceTablesProvider.overrideWith(
             (ref) => ReferenceTables(const []),
           ),
+          referralsProvider('child-1').overrideWith(
+            (ref) => Stream.value(const <Referral>[]),
+          ),
         ],
         child: MaterialApp(
           locale: const Locale('hi'),
@@ -76,7 +79,12 @@ void main() {
 
     // Latest (newest-first) is SAM, shown in the banner.
     expect(find.text('गंभीर कुपोषण (SAM)'), findsWidgets);
-    // The older MAM visit is listed too.
+    // The older MAM visit is listed too (scroll the lazy list to reach it).
+    await tester.scrollUntilVisible(
+      find.text('मध्यम कुपोषण (MAM)'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
     expect(find.text('मध्यम कुपोषण (MAM)'), findsOneWidget);
   });
 }
