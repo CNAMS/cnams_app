@@ -24,15 +24,18 @@ Status: ⬜ todo · 🚧 in progress · ✅ done · 🔗 blocked by another trac
 
 ---
 
-## R1 — Finish P5 field features
+## R1 — Finish P5 field features ✅
 
-- ⬜ **Centre view** (`FR-APP-14`): the AWW's own rollup — screened this month,
-  flagged (SAM/MAM), overdue — computed from the local DB. Screen stub exists.
-- ⬜ **Referral flow** (`FR-APP-9`): raise a referral from a SAM/MAM result
-  (ANM/PHC/NRC) and record its outcome (`pending`/`attended`/`not_attended`/
-  `unknown`) on a later visit. `ReferralsDao` + repository exist; add repo methods,
-  a raise-referral action on the result, and a follow-up list.
-- ⬜ Show referrals + outcomes in the child history.
+- ✅ **Centre view** (`FR-APP-14`): the AWW's own rollup — screened this month,
+  flagged (SAM/MAM), overdue — computed live from the local DB, with the lists
+  behind each count. Replaced the dev "Result demo" tab.
+- ✅ **Referral flow** (`FR-APP-9`): `ReferralRepository` (raise ANM/PHC/NRC +
+  record outcome + per-child query, outbox-queued); a "Refer" action on a SAM/MAM
+  result and a **Referrals** section with a record-outcome picker in the history.
+- ✅ Referrals + outcomes shown in the child history.
+
+_Also fixed here:_ ✅ the DOB entry (calendar month was unusable) → year/month/day
+dropdowns.
 
 ## R2 — Child lifecycle completeness
 
