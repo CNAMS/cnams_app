@@ -19,6 +19,7 @@ import 'package:cgms_app/features/measure/result_view.dart';
 import 'package:cgms_app/features/referral/referral_ui.dart';
 import 'package:cgms_app/features/roster/child_registration_screen.dart';
 import 'package:cgms_app/shared/theme/app_theme.dart';
+import 'package:cgms_app/shared/widgets/empty_state.dart';
 
 class ChildHistoryScreen extends ConsumerWidget {
   const ChildHistoryScreen({required this.child, super.key});
@@ -140,7 +141,18 @@ class ChildHistoryScreen extends ConsumerWidget {
         error: (e, _) => Center(child: Text('$e')), // i18n-ignore: diagnostic
         data: (rows) {
           if (rows.isEmpty) {
-            return Center(child: Text(l10n.historyNoVisits));
+            return EmptyState(
+              message: l10n.historyNoVisits,
+              action: FilledButton.icon(
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => CaptureFlowScreen(child: child),
+                  ),
+                ),
+                icon: const Icon(Icons.straighten),
+                label: Text(l10n.newMeasurement),
+              ),
+            );
           }
           final latest = rows.first; // newest first
           final latestClass = _classOf(latest.classification);
