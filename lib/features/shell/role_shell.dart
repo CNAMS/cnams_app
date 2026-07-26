@@ -15,8 +15,8 @@ import 'package:cgms_app/features/dashboard/admin_dashboard.dart';
 import 'package:cgms_app/features/dashboard/doctor_dashboard.dart';
 import 'package:cgms_app/features/dashboard/parent_dashboard.dart';
 import 'package:cgms_app/features/dashboard/supervisor_dashboard.dart';
+import 'package:cgms_app/features/centre/centre_screen.dart';
 import 'package:cgms_app/features/home/home_screen.dart';
-import 'package:cgms_app/features/measure/result_demo_screen.dart';
 import 'package:cgms_app/features/roster/roster_screen.dart';
 import 'package:cgms_app/features/settings/settings_screen.dart';
 
@@ -61,10 +61,10 @@ class _RoleShellState extends ConsumerState<RoleShell> {
             label: l10n.navRoster,
           ),
           (
-            page: const ResultDemoScreen(),
-            icon: Icons.assignment_outlined,
-            selectedIcon: Icons.assignment,
-            label: l10n.navResultDemo,
+            page: const CentreScreen(),
+            icon: Icons.home_work_outlined,
+            selectedIcon: Icons.home_work,
+            label: l10n.navCentre,
           ),
           settings,
         ];

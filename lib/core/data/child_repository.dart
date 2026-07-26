@@ -56,11 +56,19 @@ class RosterEntry {
     required this.child,
     required this.lastMeasuredAt,
     required this.isOverdue,
+    this.lastClassification,
   });
 
   final Child child;
   final DateTime? lastMeasuredAt;
   final bool isOverdue;
+
+  /// The child's most recent classification ('sam'/'mam'/...), or null if never
+  /// measured.
+  final String? lastClassification;
+
+  bool get isFlagged =>
+      lastClassification == 'sam' || lastClassification == 'mam';
 }
 
 class ChildRepository {
@@ -88,7 +96,9 @@ class ChildRepository {
     final query = _db.customSelect(
       'SELECT c.*, '
       '(SELECT MAX(m.measured_at) FROM measurements m WHERE m.child_id = c.id) '
-      'AS last_measured_at '
+      'AS last_measured_at, '
+      '(SELECT m.classification FROM measurements m WHERE m.child_id = c.id '
+      'ORDER BY m.measured_at DESC LIMIT 1) AS last_classification '
       'FROM children c '
       'WHERE c.centre_id = ?1 AND c.deleted = 0 '
       'ORDER BY LOWER(c.name)',
@@ -107,6 +117,7 @@ class ChildRepository {
       child: child,
       lastMeasuredAt: last,
       isOverdue: _isOverdue(last),
+      lastClassification: row.data['last_classification'] as String?,
     );
   }
 

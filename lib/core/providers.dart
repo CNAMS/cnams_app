@@ -70,6 +70,34 @@ final measurementsProvider =
   return ref.watch(measurementRepositoryProvider).watchForChild(childId);
 });
 
+/// Centre rollup counts (AWW centre view), derived from the live roster.
+typedef CentreStats = ({
+  int total,
+  int screenedThisMonth,
+  int flagged,
+  int overdue
+});
+
+final centreStatsProvider = Provider<CentreStats>((ref) {
+  final roster = ref.watch(rosterProvider).valueOrNull ?? const [];
+  final now = DateTime.now();
+  final monthStart = DateTime(now.year, now.month);
+  var screened = 0, flagged = 0, overdue = 0;
+  for (final e in roster) {
+    if (e.lastMeasuredAt != null && !e.lastMeasuredAt!.isBefore(monthStart)) {
+      screened++;
+    }
+    if (e.isFlagged) flagged++;
+    if (e.isOverdue) overdue++;
+  }
+  return (
+    total: roster.length,
+    screenedThisMonth: screened,
+    flagged: flagged,
+    overdue: overdue,
+  );
+});
+
 /// The bundled WHO reference tables, loaded once from assets.
 final referenceTablesProvider = FutureProvider<ReferenceTables>(
   (ref) => loadReferenceTables(),
