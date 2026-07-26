@@ -44,6 +44,9 @@
   "sexMale": "Boy",
   "sexFemale": "Girl",
   "fieldDob": "Date of birth",
+  "dobYear": "Year",
+  "dobMonth": "Month",
+  "dobDay": "Day",
   "fieldDobPrecision": "Date-of-birth precision",
   "dobExact": "Exact",
   "dobMonth": "Month only",
@@ -179,5 +182,12 @@
   "navCard": "Card",
   "navUsers": "Users",
   "navAnalytics": "Analytics",
-  "navConfig": "Config"
+  "navConfig": "Config",
+  "navCentre": "My centre",
+  "centreTitle": "My centre",
+  "centreScreenedThisMonth": "Measured this month",
+  "centreFlaggedChildren": "Flagged children",
+  "centreOverdueChildren": "Overdue children",
+  "centreNoneFlagged": "No flagged children",
+  "centreNoneOverdue": "No overdue children"
 }

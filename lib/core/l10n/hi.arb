@@ -50,6 +50,9 @@
   "sexMale": "लड़का",
   "sexFemale": "लड़की",
   "fieldDob": "जन्म तिथि",
+  "dobYear": "वर्ष",
+  "dobMonth": "माह",
+  "dobDay": "दिन",
   "fieldDobPrecision": "जन्म तिथि की निश्चितता",
   "dobExact": "सटीक",
   "dobMonth": "केवल माह",
@@ -185,5 +188,12 @@
   "navCard": "कार्ड",
   "navUsers": "उपयोगकर्ता",
   "navAnalytics": "विश्लेषण",
-  "navConfig": "कॉन्फ़िग"
+  "navConfig": "कॉन्फ़िग",
+  "navCentre": "मेरा केंद्र",
+  "centreTitle": "मेरा केंद्र",
+  "centreScreenedThisMonth": "इस माह मापे गए",
+  "centreFlaggedChildren": "चिह्नित बच्चे",
+  "centreOverdueChildren": "बकाया बच्चे",
+  "centreNoneFlagged": "कोई चिह्नित बच्चा नहीं",
+  "centreNoneOverdue": "कोई बकाया बच्चा नहीं"
 }
