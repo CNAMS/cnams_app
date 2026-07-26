@@ -14,6 +14,7 @@ import 'package:cgms_app/core/ble/mock_device_client.dart';
 import 'package:cgms_app/core/data/centre_repository.dart';
 import 'package:cgms_app/core/data/child_repository.dart';
 import 'package:cgms_app/core/data/measurement_repository.dart';
+import 'package:cgms_app/core/data/referral_repository.dart';
 import 'package:cgms_app/core/db/app_database.dart';
 import 'package:cgms_app/core/reference/reference_loader.dart';
 import 'package:cgms_app/core/zscore/reference_tables.dart';
@@ -45,6 +46,16 @@ final childRepositoryProvider = Provider<ChildRepository>(
 final measurementRepositoryProvider = Provider<MeasurementRepository>(
   (ref) => MeasurementRepository(ref.watch(appDatabaseProvider)),
 );
+
+final referralRepositoryProvider = Provider<ReferralRepository>(
+  (ref) => ReferralRepository(ref.watch(appDatabaseProvider)),
+);
+
+/// A child's referrals, newest first.
+final referralsProvider =
+    StreamProvider.family<List<Referral>, String>((ref, childId) {
+  return ref.watch(referralRepositoryProvider).watchForChild(childId);
+});
 
 /// The measuring device. P2 always returns the mock; P3 swaps in the real
 /// flutter_blue_plus client behind the same interface.
