@@ -66,11 +66,11 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
             ),
           ),
           Expanded(
-            child: Center(
+            child: Align(
+              alignment: Alignment.topCenter,
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 460),
                 child: ListView(
-                  shrinkWrap: true,
                   padding: const EdgeInsets.all(AppSpacing.xl),
                   children: [
                     PremiumCard(
@@ -163,6 +163,10 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
   }
 }
 
+/// A symmetric 2-column grid of role cards — every cell the same width and
+/// height regardless of which role is selected or how long its label is (so
+/// the layout no longer shifts between AWW and the shorter roles). The last
+/// odd role fills its own cell and an empty one keeps the column aligned.
 class _RoleGrid extends StatelessWidget {
   const _RoleGrid({required this.selected, required this.onSelect});
 
@@ -172,19 +176,42 @@ class _RoleGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: [
-        for (final role in AppRole.values)
-          _RoleChip(
-            role: role,
-            label: roleLabel(l10n, role),
-            selected: role == selected,
-            onTap: () => onSelect(role),
+    const roles = AppRole.values;
+    final rows = <Widget>[];
+    for (var i = 0; i < roles.length; i += 2) {
+      final left = roles[i];
+      final right = (i + 1 < roles.length) ? roles[i + 1] : null;
+      rows.add(
+        Padding(
+          padding: EdgeInsets.only(top: i == 0 ? 0 : AppSpacing.sm),
+          child: Row(
+            children: [
+              Expanded(
+                child: _RoleChip(
+                  role: left,
+                  label: roleLabel(l10n, left),
+                  selected: left == selected,
+                  onTap: () => onSelect(left),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              // Empty cell keeps the last odd item the same width as the rest.
+              Expanded(
+                child: right == null
+                    ? const SizedBox.shrink()
+                    : _RoleChip(
+                        role: right,
+                        label: roleLabel(l10n, right),
+                        selected: right == selected,
+                        onTap: () => onSelect(right),
+                      ),
+              ),
+            ],
           ),
-      ],
-    );
+        ),
+      );
+    }
+    return Column(children: rows);
   }
 }
 
@@ -204,31 +231,40 @@ class _RoleChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = roleColor(role);
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: selected ? color.withValues(alpha: 0.12) : null,
-          border: Border.all(
-            color: selected ? color : Theme.of(context).dividerColor,
-            width: selected ? 2 : 1,
-          ),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(roleIcon(role), size: 18, color: color),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: TextStyle(
-                fontWeight: selected ? FontWeight.bold : FontWeight.normal,
-              ),
+    return Material(
+      color: selected ? color.withValues(alpha: 0.12) : Colors.transparent,
+      borderRadius: AppRadius.allMd,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: AppRadius.allMd,
+        child: Container(
+          height: 56,
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: selected ? color : Theme.of(context).dividerColor,
+              width: selected ? 2 : 1,
             ),
-          ],
+            borderRadius: AppRadius.allMd,
+          ),
+          child: Row(
+            children: [
+              Icon(roleIcon(role), size: 20, color: color),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontWeight:
+                        selected ? FontWeight.bold : FontWeight.normal,
+                    height: 1.1,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
