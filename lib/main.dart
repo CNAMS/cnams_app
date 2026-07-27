@@ -11,6 +11,7 @@ import 'package:cgms_app/features/auth/pin_unlock_screen.dart';
 import 'package:cgms_app/features/auth/sign_in_screen.dart';
 import 'package:cgms_app/features/onboarding/language_screen.dart';
 import 'package:cgms_app/features/onboarding/splash_screen.dart';
+import 'package:cgms_app/features/onboarding/welcome_screen.dart';
 import 'package:cgms_app/features/shell/role_shell.dart';
 import 'package:cgms_app/shared/theme/app_theme.dart';
 
@@ -121,7 +122,17 @@ class _AppFlow extends ConsumerWidget {
     }
 
     final languageChosen = ref.watch(languageChosenProvider);
-    if (!languageChosen) return const LanguageScreen();
+    if (!languageChosen) {
+      // First run: a premium welcome moment before the language choice.
+      final welcomeShown = ref.watch(welcomeShownProvider);
+      if (!welcomeShown) {
+        return WelcomeScreen(
+          onGetStarted: () =>
+              ref.read(welcomeShownProvider.notifier).state = true,
+        );
+      }
+      return const LanguageScreen();
+    }
 
     // Signed out → sign in; signed in → the PIN gate + role shell.
     final session = ref.watch(authControllerProvider);
