@@ -11,10 +11,11 @@ import 'package:cgms_app/core/data/child_repository.dart';
 import 'package:cgms_app/core/l10n/generated/app_localizations.dart';
 import 'package:cgms_app/core/providers.dart';
 import 'package:cgms_app/core/zscore/classification.dart';
-import 'package:cgms_app/features/dashboard/dashboard_widgets.dart';
 import 'package:cgms_app/features/history/child_history_screen.dart';
 import 'package:cgms_app/shared/theme/app_theme.dart';
+import 'package:cgms_app/shared/theme/design_tokens.dart';
 import 'package:cgms_app/shared/widgets/error_view.dart';
+import 'package:cgms_app/shared/widgets/premium.dart';
 
 class CentreScreen extends ConsumerWidget {
   const CentreScreen({super.key});
@@ -37,42 +38,57 @@ class CentreScreen extends ConsumerWidget {
           final overdue = entries.where((e) => e.isOverdue).toList();
 
           return ListView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpacing.xl),
             children: [
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  DashStatTile(
-                    value: '${stats.screenedThisMonth}',
-                    label: l10n.centreScreenedThisMonth,
-                    color: AppTheme.styleFor(GrowthClass.normal).color,
-                    icon: Icons.check_circle,
+                  Expanded(
+                    child: MetricCard(
+                      icon: Icons.check_circle_outline,
+                      value: '${stats.screenedThisMonth}',
+                      label: l10n.centreScreenedThisMonth,
+                      color: AppTheme.styleFor(GrowthClass.normal).color,
+                    ),
                   ),
-                  const SizedBox(width: 8),
-                  DashStatTile(
-                    value: '${stats.flagged}',
-                    label: l10n.flaggedCount,
-                    color: const Color(0xFFC62828),
-                    icon: Icons.flag,
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: MetricCard(
+                      icon: Icons.flag_outlined,
+                      value: '${stats.flagged}',
+                      label: l10n.flaggedCount,
+                      color: const Color(0xFFC62828),
+                    ),
                   ),
-                  const SizedBox(width: 8),
-                  DashStatTile(
-                    value: '${stats.overdue}',
-                    label: l10n.overdueCount,
-                    color: const Color(0xFFE68A00),
-                    icon: Icons.schedule,
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: MetricCard(
+                      icon: Icons.schedule,
+                      value: '${stats.overdue}',
+                      label: l10n.overdueCount,
+                      color: const Color(0xFFE68A00),
+                    ),
                   ),
                 ],
               ),
-              DashSection(title: l10n.centreFlaggedChildren),
-              if (flagged.isEmpty)
-                _EmptyLine(text: l10n.centreNoneFlagged)
-              else
-                for (final e in flagged) _ChildRow(entry: e),
-              DashSection(title: l10n.centreOverdueChildren),
-              if (overdue.isEmpty)
-                _EmptyLine(text: l10n.centreNoneOverdue)
-              else
-                for (final e in overdue) _ChildRow(entry: e),
+              SectionTitle(title: l10n.centreFlaggedChildren),
+              PremiumCard(
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+                child: flagged.isEmpty
+                    ? _EmptyLine(text: l10n.centreNoneFlagged)
+                    : Column(
+                        children: [for (final e in flagged) _ChildRow(entry: e)],
+                      ),
+              ),
+              SectionTitle(title: l10n.centreOverdueChildren),
+              PremiumCard(
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+                child: overdue.isEmpty
+                    ? _EmptyLine(text: l10n.centreNoneOverdue)
+                    : Column(
+                        children: [for (final e in overdue) _ChildRow(entry: e)],
+                      ),
+              ),
             ],
           );
         },
