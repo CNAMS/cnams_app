@@ -61,10 +61,12 @@ class DoctorDashboard extends StatelessWidget {
             ],
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.all(AppSpacing.xl),
-          child: Column(
-            children: [for (final c in _cases) _CaseCard(c: c)],
+        Reveal(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.xl),
+            child: Column(
+              children: [for (final c in _cases) _CaseCard(c: c)],
+            ),
           ),
         ),
       ],

@@ -30,83 +30,88 @@ class SupervisorDashboard extends StatelessWidget {
           title: l10n.dashSectorOverview,
           trailing: const HeaderSampleTag(),
         ),
-        Padding(
-          padding: const EdgeInsets.all(AppSpacing.xl),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: MetricCard(
-                      icon: Icons.groups,
-                      value: '486',
-                      label: l10n.dashScreened,
-                      color: const Color(0xFF2E7D32),
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: MetricCard(
-                      icon: Icons.error_outline,
-                      value: '9',
-                      label: l10n.resultSam,
-                      color: const Color(0xFFC62828),
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: MetricCard(
-                      icon: Icons.warning_amber,
-                      value: '31',
-                      label: l10n.resultMam,
-                      color: const Color(0xFFE68A00),
-                    ),
-                  ),
-                ],
-              ),
-              SectionTitle(title: l10n.dashOverdueCentres),
-              const PremiumCard(
-                padding: EdgeInsets.symmetric(vertical: AppSpacing.xs),
-                child: Column(
+        Reveal(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.xl),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _CentreRow(name: 'AWC 207 · Rampur', overdue: 18, ok: false),
-                    _CentreRow(name: 'AWC 214 · Sitapur', overdue: 5, ok: true),
-                    _CentreRow(name: 'AWC 233 · Bansi', overdue: 12, ok: false),
-                  ],
-                ),
-              ),
-              SectionTitle(title: l10n.dashReferralFollowup),
-              PremiumCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(l10n.dashAttended),
-                        const Text(
-                          '22 / 40', // i18n-ignore: numeric ratio
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontFeatures: [FontFeature.tabularFigures()],
-                          ),
-                        ),
-                      ],
+                    Expanded(
+                      child: MetricCard(
+                        icon: Icons.groups,
+                        value: '486',
+                        label: l10n.dashScreened,
+                        color: const Color(0xFF2E7D32),
+                      ),
                     ),
-                    const SizedBox(height: AppSpacing.md),
-                    const ClipRRect(
-                      borderRadius: AppRadius.allPill,
-                      child: LinearProgressIndicator(
-                        value: 22 / 40,
-                        minHeight: 10,
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: MetricCard(
+                        icon: Icons.error_outline,
+                        value: '9',
+                        label: l10n.resultSam,
+                        color: const Color(0xFFC62828),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: MetricCard(
+                        icon: Icons.warning_amber,
+                        value: '31',
+                        label: l10n.resultMam,
+                        color: const Color(0xFFE68A00),
                       ),
                     ),
                   ],
                 ),
-              ),
-            ],
+                SectionTitle(title: l10n.dashOverdueCentres),
+                const PremiumCard(
+                  padding: EdgeInsets.symmetric(vertical: AppSpacing.xs),
+                  child: Column(
+                    children: [
+                      _CentreRow(
+                          name: 'AWC 207 · Rampur', overdue: 18, ok: false),
+                      _CentreRow(
+                          name: 'AWC 214 · Sitapur', overdue: 5, ok: true),
+                      _CentreRow(
+                          name: 'AWC 233 · Bansi', overdue: 12, ok: false),
+                    ],
+                  ),
+                ),
+                SectionTitle(title: l10n.dashReferralFollowup),
+                PremiumCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(l10n.dashAttended),
+                          const Text(
+                            '22 / 40', // i18n-ignore: numeric ratio
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontFeatures: [FontFeature.tabularFigures()],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      const ClipRRect(
+                        borderRadius: AppRadius.allPill,
+                        child: LinearProgressIndicator(
+                          value: 22 / 40,
+                          minHeight: 10,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],

@@ -48,104 +48,108 @@ class ParentDashboard extends StatelessWidget {
           ),
           trailing: HeaderSampleTag(),
         ),
-        Padding(
-          padding: const EdgeInsets.all(AppSpacing.xl),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Plain-language status — colour + word + icon, reassuring.
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                decoration: BoxDecoration(
-                  color: normal.color,
-                  borderRadius: AppRadius.allLg,
-                  boxShadow: AppShadows.soft(theme.brightness),
-                ),
-                child: Row(
-                  children: [
-                    Icon(normal.icon, color: normal.onColor, size: 32),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            l10n.resultNormal,
-                            style: TextStyle(
-                              color: normal.onColor,
-                              fontSize: 19,
-                              fontWeight: FontWeight.bold,
+        Reveal(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.xl),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Plain-language status — colour + word + icon, reassuring.
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  decoration: BoxDecoration(
+                    color: normal.color,
+                    borderRadius: AppRadius.allLg,
+                    boxShadow: AppShadows.soft(theme.brightness),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(normal.icon, color: normal.onColor, size: 32),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              l10n.resultNormal,
+                              style: TextStyle(
+                                color: normal.onColor,
+                                fontSize: 19,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            // i18n-ignore: sample copy
-                            'आपका बच्चा अच्छी तरह बढ़ रहा है',
-                            style: TextStyle(
-                              color: normal.onColor.withValues(alpha: 0.92),
-                              fontSize: 13,
+                            const SizedBox(height: 2),
+                            Text(
+                              // i18n-ignore: sample copy
+                              'आपका बच्चा अच्छी तरह बढ़ रहा है',
+                              style: TextStyle(
+                                color: normal.onColor.withValues(alpha: 0.92),
+                                fontSize: 13,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              PremiumCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l10n.historyGrowthCurve,
-                      style: theme.textTheme.labelLarge,
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    const SizedBox(height: 64, child: _Sparkline()),
-                    const Divider(height: AppSpacing.xxl),
-                    _kv('Weight', '9.5 kg'),
-                    _kv('Age', '14 months'),
-                  ],
-                ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              PremiumCard(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.lg,
-                  vertical: AppSpacing.md,
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(AppSpacing.sm),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primary.withValues(alpha: 0.12),
-                        borderRadius: AppRadius.allMd,
+                const SizedBox(height: AppSpacing.lg),
+                PremiumCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.historyGrowthCurve,
+                        style: theme.textTheme.labelLarge,
                       ),
-                      child: Icon(Icons.event, color: theme.colorScheme.primary),
-                    ),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: Text(
-                        'अगली मुलाक़ात', // i18n-ignore: sample copy
-                        style: theme.textTheme.titleSmall,
+                      const SizedBox(height: AppSpacing.md),
+                      const SizedBox(height: 64, child: _Sparkline()),
+                      const Divider(height: AppSpacing.xxl),
+                      _kv('Weight', '9.5 kg'),
+                      _kv('Age', '14 months'),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                PremiumCard(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.lg,
+                    vertical: AppSpacing.md,
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(AppSpacing.sm),
+                        decoration: BoxDecoration(
+                          color:
+                              theme.colorScheme.primary.withValues(alpha: 0.12),
+                          borderRadius: AppRadius.allMd,
+                        ),
+                        child:
+                            Icon(Icons.event, color: theme.colorScheme.primary),
                       ),
-                    ),
-                    const Text('15 Aug'), // i18n-ignore: sample date
-                  ],
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: Text(
+                          'अगली मुलाक़ात', // i18n-ignore: sample copy
+                          style: theme.textTheme.titleSmall,
+                        ),
+                      ),
+                      const Text('15 Aug'), // i18n-ignore: sample date
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              FilledButton.icon(
-                onPressed: () {},
-                icon: const Icon(Icons.badge_outlined),
-                label: Text(l10n.parentCard),
-                style: FilledButton.styleFrom(
-                  minimumSize: const Size.fromHeight(54),
+                const SizedBox(height: AppSpacing.lg),
+                FilledButton.icon(
+                  onPressed: () {},
+                  icon: const Icon(Icons.badge_outlined),
+                  label: Text(l10n.parentCard),
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size.fromHeight(54),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ],

@@ -32,80 +32,82 @@ class AdminDashboard extends StatelessWidget {
           title: l10n.roleAdmin,
           trailing: const HeaderSampleTag(),
         ),
-        Padding(
-          padding: const EdgeInsets.all(AppSpacing.xl),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: MetricCard(
-                      icon: Icons.home_work_outlined,
-                      value: '42',
-                      label: l10n.dashCentres,
-                      color: slate,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: MetricCard(
-                      icon: Icons.people_outline,
-                      value: '128',
-                      label: l10n.dashUsers,
-                      color: slate,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: MetricCard(
-                      icon: Icons.trending_up,
-                      value: '91%',
-                      label: l10n.dashCoverage,
-                      color: const Color(0xFF2E7D32),
-                    ),
-                  ),
-                ],
-              ),
-              SectionTitle(title: l10n.dashPendingApprovals),
-              PremiumCard(
-                padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
-                child: Column(
+        Reveal(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.xl),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _ApprovalRow(
-                      name: 'Dr. Rekha',
-                      detail: 'Doctor · PHC Rampur',
-                      l10n: l10n,
+                    Expanded(
+                      child: MetricCard(
+                        icon: Icons.home_work_outlined,
+                        value: '42',
+                        label: l10n.dashCentres,
+                        color: slate,
+                      ),
                     ),
-                    const Divider(height: 1),
-                    _ApprovalRow(
-                      name: 'Vikram S.',
-                      detail: 'Supervisor · Sitapur',
-                      l10n: l10n,
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: MetricCard(
+                        icon: Icons.people_outline,
+                        value: '128',
+                        label: l10n.dashUsers,
+                        color: slate,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: MetricCard(
+                        icon: Icons.trending_up,
+                        value: '91%',
+                        label: l10n.dashCoverage,
+                        color: const Color(0xFF2E7D32),
+                      ),
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(height: AppSpacing.xl),
-              _ConsoleLink(
-                icon: Icons.insights,
-                title: l10n.dashProgramAnalytics,
-                color: slate,
-                onTap: () {},
-              ),
-              const SizedBox(height: AppSpacing.md),
-              _ConsoleLink(
-                icon: Icons.monitor_heart_outlined,
-                title: l10n.dashAppAnalytics,
-                color: slate,
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => const AppAnalyticsScreen(),
+                SectionTitle(title: l10n.dashPendingApprovals),
+                PremiumCard(
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+                  child: Column(
+                    children: [
+                      _ApprovalRow(
+                        name: 'Dr. Rekha',
+                        detail: 'Doctor · PHC Rampur',
+                        l10n: l10n,
+                      ),
+                      const Divider(height: 1),
+                      _ApprovalRow(
+                        name: 'Vikram S.',
+                        detail: 'Supervisor · Sitapur',
+                        l10n: l10n,
+                      ),
+                    ],
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(height: AppSpacing.xl),
+                _ConsoleLink(
+                  icon: Icons.insights,
+                  title: l10n.dashProgramAnalytics,
+                  color: slate,
+                  onTap: () {},
+                ),
+                const SizedBox(height: AppSpacing.md),
+                _ConsoleLink(
+                  icon: Icons.monitor_heart_outlined,
+                  title: l10n.dashAppAnalytics,
+                  color: slate,
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const AppAnalyticsScreen(),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],
