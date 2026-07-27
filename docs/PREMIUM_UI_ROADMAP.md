@@ -9,7 +9,7 @@ core, or the Hindi-first / colour-never-alone rules.
 Organised as phases **U1–U7**, each tested, committed granularly, and pushed to
 both repos (`PranavShukla2/cgms` `main`, `CNAMS/cnams_app` `Pranav`).
 
-Status: ⬜ todo · 🚧 in progress · ✅ done.
+Status: ⬜ todo · 🚧 in progress · ✅ done. **All phases U1–U7 are ✅ complete.**
 
 ---
 
@@ -47,7 +47,7 @@ amber `#E68A00`, Admin slate/indigo `#4B5570`.
 
 ---
 
-## U1 — Design-token foundation & premium components ⬜
+## U1 — Design-token foundation & premium components ✅
 
 - **`design_tokens.dart`** — `AppSpacing` (4/8/12/16/20/24/32), `AppRadius`
   (sm/md/lg/xl + pill), `AppShadows` (soft/lifted, theme-aware), and a
@@ -60,7 +60,7 @@ amber `#E68A00`, Admin slate/indigo `#4B5570`.
 - Wire the tokens into `AppTheme.forRole` (card theme, input theme, radii) so
   even un-migrated screens inherit the softer shapes.
 
-## U2 — Landing / welcome & onboarding polish ⬜
+## U2 — Landing / welcome & onboarding polish ✅
 
 - A premium **welcome screen** (shown first-run, before language): the sprout
   mark, wordmark + tagline *हर बच्चा, स्वस्थ विकास*, a soft botanical gradient,
@@ -69,20 +69,20 @@ amber `#E68A00`, Admin slate/indigo `#4B5570`.
   its own script, a check, a subtle gradient).
 - Splash stays; confirm the grow-motion + reduce-motion path still holds.
 
-## U3 — Sign-in premium polish ⬜
+## U3 — Sign-in premium polish ✅
 
 - Role picker as refined segmented cards with role colour + icon; the auth
   methods grouped with clear primary (Google) vs secondary hierarchy; a soft
   header; better spacing and a trust footer.
 
-## U4 — AWW home (the most-used screen) ⬜
+## U4 — AWW home (the most-used screen) ✅
 
 - Replace the sample stat tiles with a `GradientHeader` + live `MetricCard`s wired
   to **real centre stats** (screened / flagged / overdue from the DB) — drop the
   `SampleChip`.
 - A prominent, premium "New measurement" CTA and a live sync-status card.
 
-## U5 — Supervisor / Doctor / Parent dashboards ⬜
+## U5 — Supervisor / Doctor / Parent dashboards ✅
 
 - **Supervisor** — sector rollup hero + metric cards (centres, screened, SAM/MAM,
   overdue), a flagged-cases list, wired to real roster/referral data where it
@@ -93,7 +93,7 @@ amber `#E68A00`, Admin slate/indigo `#4B5570`.
 - **Parent** — a warm, reassuring single-child card: hero with the child, a big
   status line, the growth curve, and the next-visit reminder.
 
-## U6 — Admin console & app-analytics ⬜
+## U6 — Admin console & app-analytics ✅
 
 - A light "console" hero + summary metric cards that route to sub-pages
   (Users / Centres / Program analytics / App analytics / Config / Audit) —
@@ -102,7 +102,7 @@ amber `#E68A00`, Admin slate/indigo `#4B5570`.
   adoption, crash-free rate (on the telemetry seams; sample where the server data
   isn't wired, marked).
 
-## U7 — Motion & final polish ⬜
+## U7 — Motion & final polish ✅
 
 - Staggered dashboard card entrance, pressed-tile scale, chart reveal — all
   reduce-motion aware.
