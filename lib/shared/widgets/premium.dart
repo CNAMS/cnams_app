@@ -109,8 +109,10 @@ class GradientHeader extends StatelessWidget {
   }
 }
 
-/// A soft-shadow surface — the premium replacement for a raw [Card].
-class PremiumCard extends StatelessWidget {
+/// A soft-shadow surface — the premium replacement for a raw [Card]. When
+/// tappable it gives a gentle press-scale (reduce-motion aware) for a tactile
+/// feel beyond the ink splash.
+class PremiumCard extends StatefulWidget {
   const PremiumCard({
     required this.child,
     this.onTap,
@@ -123,25 +125,43 @@ class PremiumCard extends StatelessWidget {
   final EdgeInsets padding;
 
   @override
+  State<PremiumCard> createState() => _PremiumCardState();
+}
+
+class _PremiumCardState extends State<PremiumCard> {
+  bool _pressed = false;
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final surface = theme.colorScheme.surface;
     final content = Container(
       decoration: BoxDecoration(
-        color: surface,
+        color: theme.colorScheme.surface,
         borderRadius: AppRadius.allLg,
         boxShadow: AppShadows.soft(theme.brightness),
       ),
-      child: Padding(padding: padding, child: child),
+      child: Padding(padding: widget.padding, child: widget.child),
     );
-    if (onTap == null) return content;
-    return Material(
-      color: Colors.transparent,
-      borderRadius: AppRadius.allLg,
-      child: InkWell(
-        borderRadius: AppRadius.allLg,
-        onTap: onTap,
-        child: content,
+    if (widget.onTap == null) return content;
+
+    final reduceMotion = MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _pressed = true),
+      onTapUp: (_) => setState(() => _pressed = false),
+      onTapCancel: () => setState(() => _pressed = false),
+      child: AnimatedScale(
+        scale: (_pressed && !reduceMotion) ? 0.97 : 1,
+        duration: const Duration(milliseconds: 110),
+        curve: Curves.easeOut,
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: AppRadius.allLg,
+          child: InkWell(
+            borderRadius: AppRadius.allLg,
+            onTap: widget.onTap,
+            child: content,
+          ),
+        ),
       ),
     );
   }
@@ -208,6 +228,35 @@ class MetricCard extends StatelessWidget {
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+/// A one-shot entrance: fades and gently rises its child in once on mount.
+/// Bounded (≈360 ms) so it settles under pumpAndSettle, and held still under
+/// reduce-motion. Uses an implicit [TweenAnimationBuilder] (no timers/tickers of
+/// its own to leak) so it's test-safe.
+class Reveal extends StatelessWidget {
+  const Reveal({required this.child, super.key});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final reduceMotion = MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    if (reduceMotion) return child;
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: const Duration(milliseconds: 360),
+      curve: Curves.easeOutCubic,
+      child: child,
+      builder: (context, t, child) => Opacity(
+        opacity: t,
+        child: Transform.translate(
+          offset: Offset(0, (1 - t) * 12),
+          child: child,
+        ),
       ),
     );
   }
