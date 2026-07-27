@@ -146,6 +146,11 @@ final currentRoleProvider = StateProvider<AppRole>((ref) => AppRole.aww);
 /// Tests override this to skip the splash animation.
 final splashShownProvider = StateProvider<bool>((ref) => false);
 
+/// Whether the first-run welcome/landing screen has been dismissed this session
+/// (not persisted). Only shown before a language has ever been chosen, so
+/// returning users never see it.
+final welcomeShownProvider = StateProvider<bool>((ref) => false);
+
 /// Whether the user has explicitly chosen a language (persisted). Until then the
 /// first-run flow shows the language screen.
 final languageChosenProvider = StateProvider<bool>(
