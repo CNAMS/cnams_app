@@ -15,6 +15,8 @@ import 'package:cgms_app/features/auth/otp_screen.dart';
 import 'package:cgms_app/features/auth/password_screen.dart';
 import 'package:cgms_app/features/auth/role_display.dart';
 import 'package:cgms_app/features/onboarding/sprout_mark.dart';
+import 'package:cgms_app/shared/theme/design_tokens.dart';
+import 'package:cgms_app/shared/widgets/premium.dart';
 
 class SignInScreen extends ConsumerStatefulWidget {
   const SignInScreen({super.key});
@@ -48,83 +50,114 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 460),
-            child: ListView(
-              shrinkWrap: true,
-              padding: const EdgeInsets.all(24),
-              children: [
-                Center(
-                  child:
-                      SproutMark(size: 56, stroke: theme.colorScheme.primary),
-                ),
-                const SizedBox(height: 12),
-                Center(
-                  child: Text(
-                    l10n.signIn,
-                    style: theme.textTheme.headlineSmall
-                        ?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Text(l10n.whoAreYou, style: theme.textTheme.labelLarge),
-                const SizedBox(height: 8),
-                _RoleGrid(
-                  selected: _role,
-                  onSelect: (r) => setState(() => _role = r),
-                ),
-                const SizedBox(height: 20),
-                FilledButton.icon(
-                  onPressed: () => ref
-                      .read(authControllerProvider.notifier)
-                      .signInWithGoogle(_role),
-                  icon: const Icon(Icons.g_mobiledata, size: 28),
-                  label: Text(l10n.continueWithGoogle),
-                  style: FilledButton.styleFrom(
-                    minimumSize: const Size.fromHeight(52),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Row(
+      body: Column(
+        children: [
+          // A role-tinted hero that recolours as you pick a role — the app
+          // shows you its per-role identity before you even sign in.
+          GradientHeader(
+            role: _role,
+            title: l10n.signIn,
+            subtitle: l10n.welcomeTagline,
+            leading: const SproutMark(
+              size: 44,
+              stroke: Colors.white,
+              leafLight: Color(0xFF8FD3C6),
+              leafDark: Color(0xFFB8E4C9),
+            ),
+          ),
+          Expanded(
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 460),
+                child: ListView(
+                  shrinkWrap: true,
+                  padding: const EdgeInsets.all(AppSpacing.xl),
                   children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () => _startOtp(OtpChannel.phone),
-                        icon: const Icon(Icons.phone_android),
-                        label: Text(l10n.signInPhoneOtp),
+                    PremiumCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(l10n.whoAreYou,
+                              style: theme.textTheme.labelLarge),
+                          const SizedBox(height: AppSpacing.md),
+                          _RoleGrid(
+                            selected: _role,
+                            onSelect: (r) => setState(() => _role = r),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () => _startOtp(OtpChannel.email),
-                        icon: const Icon(Icons.alternate_email),
-                        label: Text(l10n.signInEmailOtp),
+                    const SizedBox(height: AppSpacing.xl),
+                    FilledButton.icon(
+                      onPressed: () => ref
+                          .read(authControllerProvider.notifier)
+                          .signInWithGoogle(_role),
+                      icon: const Icon(Icons.g_mobiledata, size: 28),
+                      label: Text(l10n.continueWithGoogle),
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size.fromHeight(54),
                       ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () => _startOtp(OtpChannel.phone),
+                            icon: const Icon(Icons.phone_android),
+                            label: Text(l10n.signInPhoneOtp),
+                            style: OutlinedButton.styleFrom(
+                              minimumSize: const Size.fromHeight(48),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () => _startOtp(OtpChannel.email),
+                            icon: const Icon(Icons.alternate_email),
+                            label: Text(l10n.signInEmailOtp),
+                            style: OutlinedButton.styleFrom(
+                              minimumSize: const Size.fromHeight(48),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    OutlinedButton.icon(
+                      onPressed: _startPassword,
+                      icon: const Icon(Icons.password),
+                      label: Text(l10n.signInPassword),
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(48),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.lock_outline,
+                          size: 15,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: AppSpacing.xs),
+                        Flexible(
+                          child: Text(
+                            l10n.signInPinNote,
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.bodySmall,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-                const SizedBox(height: 10),
-                OutlinedButton.icon(
-                  onPressed: _startPassword,
-                  icon: const Icon(Icons.password),
-                  label: Text(l10n.signInPassword),
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(48),
-                  ),
-                ),
-                const SizedBox(height: 18),
-                Text(
-                  l10n.signInPinNote,
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.bodySmall,
-                ),
-              ],
+              ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
