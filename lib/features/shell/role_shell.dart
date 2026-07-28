@@ -125,7 +125,8 @@ class _RoleShellState extends ConsumerState<RoleShell> {
     final index = _index.clamp(0, dests.length - 1);
 
     return Scaffold(
-      appBar: AppBar(title: Text(dests[index].label)),
+      // No app bar: each top-level screen owns a full-bleed GradientHeader, so a
+      // Material bar on top would be a redundant double header (U8).
       // Lazy: only the selected tab is built, so a screen's data streams open on
       // demand rather than all at once on sign-in.
       body: dests[index].page,
