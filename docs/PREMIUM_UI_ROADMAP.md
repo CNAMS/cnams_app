@@ -109,6 +109,22 @@ amber `#E68A00`, Admin slate/indigo `#4B5570`.
 - Full accessibility + dark-mode sweep across the new components in every role.
 - Empty/error/loading states use the shared premium widgets everywhere.
 
+## U8 — Chromeless shell & remaining top-level screens 🚧
+
+The dashboards gained a gradient hero, but the navigation shell still stacked a
+Material `AppBar` on top of it — a redundant double header. Fix the frame, then
+bring the last plain top-level screens up to the same premium bar.
+
+- **Chromeless shell** — drop the shell `AppBar`; each top-level tab screen owns
+  its full-bleed `GradientHeader`. The bottom nav still names the location.
+- **Settings** — a role-tinted header carrying the account + sign-out, then the
+  Language / Data & security / About groups as `PremiumCard`s.
+- **Roster** — a `GradientHeader` with the search field and overdue/sort controls
+  living in the hero's `bottom` slot.
+- **Centre** — a matching `GradientHeader` above the live metric cards.
+- Pushed secondary screens (capture, registration, history, result, OTP, PIN)
+  keep a normal app bar — the hero treatment is for the top-level surfaces.
+
 ---
 
 ## Out of scope (other tracks — see UPDATES.md)
