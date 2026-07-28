@@ -13,11 +13,14 @@ import 'package:cgms_app/core/l10n/generated/app_localizations.dart';
 import 'package:cgms_app/core/providers.dart';
 import 'package:cgms_app/core/zscore/classification.dart';
 import 'package:cgms_app/features/history/child_history_screen.dart';
-import 'package:cgms_app/features/measure/result_view.dart' show growthClassLabel;
+import 'package:cgms_app/features/measure/result_view.dart'
+    show growthClassLabel;
 import 'package:cgms_app/features/roster/child_registration_screen.dart';
 import 'package:cgms_app/shared/theme/app_theme.dart';
+import 'package:cgms_app/shared/theme/design_tokens.dart';
 import 'package:cgms_app/shared/widgets/empty_state.dart';
 import 'package:cgms_app/shared/widgets/error_view.dart';
+import 'package:cgms_app/shared/widgets/premium.dart';
 
 /// How the roster is ordered. Overdue/flagged-first put the children who need
 /// attention at the top; name is the calm default.
@@ -94,92 +97,104 @@ class _RosterScreenState extends ConsumerState<RosterScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final roster = ref.watch(rosterProvider);
+    final role = ref.watch(currentRoleProvider);
 
     return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-              child: TextField(
-                controller: _searchController,
-                onChanged: (v) => setState(() => _query = v),
-                decoration: InputDecoration(
-                  hintText: l10n.rosterSearchHint,
-                  prefixIcon: const Icon(Icons.search),
-                  suffixIcon: _query.isEmpty
-                      ? null
-                      : IconButton(
-                          icon: const Icon(Icons.clear),
-                          tooltip: l10n.a11yClearSearch,
-                          onPressed: () {
-                            _searchController.clear();
-                            setState(() => _query = '');
-                          },
-                        ),
-                  border: const OutlineInputBorder(),
-                  isDense: true,
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  FilterChip(
-                    label: Text(l10n.rosterOnlyOverdue),
-                    selected: _overdueOnly,
-                    onSelected: (v) => setState(() => _overdueOnly = v),
-                  ),
-                  const Spacer(),
-                  _SortMenu(
-                    sort: _sort,
-                    l10n: l10n,
-                    onChanged: (s) => setState(() => _sort = s),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: roster.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, _) => ErrorView(
-                  error: e,
-                  onRetry: () => ref.invalidate(rosterProvider),
-                ),
-                data: (all) {
-                  final entries = _filterAndSort(all);
-                  if (entries.isEmpty) {
-                    return EmptyState(
-                      message: _overdueOnly
-                          ? l10n.rosterEmptyOverdue
-                          : l10n.rosterEmpty,
-                      action: _overdueOnly
-                          ? null
-                          : FilledButton.icon(
-                              onPressed: _addChild,
-                              icon: const Icon(Icons.person_add),
-                              label: Text(l10n.rosterAddChild),
-                            ),
-                    );
-                  }
-                  return RefreshIndicator(
-                    onRefresh: () async => ref.invalidate(rosterProvider),
-                    child: ListView.separated(
-                      itemCount: entries.length,
-                      separatorBuilder: (_, __) => const Divider(height: 1),
-                      itemBuilder: (_, i) => _RosterTile(
-                        entry: entries[i],
-                        l10n: l10n,
-                        onTap: () => _openChild(entries[i].child),
+      body: Column(
+        children: [
+          GradientHeader(
+            role: role,
+            title: l10n.navRoster,
+            // The search field lives in the hero, as a white pill on the wash.
+            bottom: TextField(
+              controller: _searchController,
+              onChanged: (v) => setState(() => _query = v),
+              decoration: InputDecoration(
+                hintText: l10n.rosterSearchHint,
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: _query.isEmpty
+                    ? null
+                    : IconButton(
+                        icon: const Icon(Icons.clear),
+                        tooltip: l10n.a11yClearSearch,
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() => _query = '');
+                        },
                       ),
-                    ),
-                  );
-                },
+                filled: true,
+                fillColor: Colors.white,
+                border: const OutlineInputBorder(
+                  borderRadius: AppRadius.allMd,
+                  borderSide: BorderSide.none,
+                ),
+                contentPadding: EdgeInsets.zero,
+                isDense: true,
               ),
             ),
-          ],
-        ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              AppSpacing.sm,
+              AppSpacing.lg,
+              0,
+            ),
+            child: Row(
+              children: [
+                FilterChip(
+                  label: Text(l10n.rosterOnlyOverdue),
+                  selected: _overdueOnly,
+                  onSelected: (v) => setState(() => _overdueOnly = v),
+                ),
+                const Spacer(),
+                _SortMenu(
+                  sort: _sort,
+                  l10n: l10n,
+                  onChanged: (s) => setState(() => _sort = s),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: roster.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => ErrorView(
+                error: e,
+                onRetry: () => ref.invalidate(rosterProvider),
+              ),
+              data: (all) {
+                final entries = _filterAndSort(all);
+                if (entries.isEmpty) {
+                  return EmptyState(
+                    message: _overdueOnly
+                        ? l10n.rosterEmptyOverdue
+                        : l10n.rosterEmpty,
+                    action: _overdueOnly
+                        ? null
+                        : FilledButton.icon(
+                            onPressed: _addChild,
+                            icon: const Icon(Icons.person_add),
+                            label: Text(l10n.rosterAddChild),
+                          ),
+                  );
+                }
+                return RefreshIndicator(
+                  onRefresh: () async => ref.invalidate(rosterProvider),
+                  child: ListView.separated(
+                    itemCount: entries.length,
+                    separatorBuilder: (_, __) => const Divider(height: 1),
+                    itemBuilder: (_, i) => _RosterTile(
+                      entry: entries[i],
+                      l10n: l10n,
+                      onTap: () => _openChild(entries[i].child),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _addChild,
