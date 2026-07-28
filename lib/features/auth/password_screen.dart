@@ -85,9 +85,8 @@ class _PasswordScreenState extends ConsumerState<PasswordScreen> {
                 border: const OutlineInputBorder(),
                 suffixIcon: IconButton(
                   onPressed: () => setState(() => _obscure = !_obscure),
-                  tooltip: _obscure
-                      ? l10n.a11yShowPassword
-                      : l10n.a11yHidePassword,
+                  tooltip:
+                      _obscure ? l10n.a11yShowPassword : l10n.a11yHidePassword,
                   icon:
                       Icon(_obscure ? Icons.visibility : Icons.visibility_off),
                 ),

@@ -45,7 +45,8 @@ abstract final class AppShadows {
   /// A resting card: barely-there lift.
   static List<BoxShadow> soft(Brightness b) => [
         BoxShadow(
-          color: Colors.black.withValues(alpha: b == Brightness.dark ? 0.4 : 0.05),
+          color:
+              Colors.black.withValues(alpha: b == Brightness.dark ? 0.4 : 0.05),
           blurRadius: 14,
           offset: const Offset(0, 4),
         ),
@@ -54,7 +55,8 @@ abstract final class AppShadows {
   /// A raised / hero element: a touch more presence.
   static List<BoxShadow> lifted(Brightness b) => [
         BoxShadow(
-          color: Colors.black.withValues(alpha: b == Brightness.dark ? 0.5 : 0.09),
+          color:
+              Colors.black.withValues(alpha: b == Brightness.dark ? 0.5 : 0.09),
           blurRadius: 24,
           offset: const Offset(0, 8),
         ),

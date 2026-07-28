@@ -88,25 +88,21 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                     children: [
                       Text(
                         l10n.appTitle,
-                        style: Theme.of(context)
-                            .textTheme
-                            .displaySmall
-                            ?.copyWith(
-                              color: onGradient,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 0.5,
-                            ),
+                        style:
+                            Theme.of(context).textTheme.displaySmall?.copyWith(
+                                  color: onGradient,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 0.5,
+                                ),
                       ),
                       const SizedBox(height: AppSpacing.sm),
                       Text(
                         l10n.welcomeTagline,
                         textAlign: TextAlign.center,
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleMedium
-                            ?.copyWith(
-                              color: onGradient.withValues(alpha: 0.92),
-                            ),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  color: onGradient.withValues(alpha: 0.92),
+                                ),
                       ),
                     ],
                   ),

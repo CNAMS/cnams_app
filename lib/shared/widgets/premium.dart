@@ -69,24 +69,20 @@ class GradientHeader extends StatelessWidget {
                     children: [
                       Text(
                         title,
-                        style: Theme.of(context)
-                            .textTheme
-                            .headlineSmall
-                            ?.copyWith(
-                              color: onGradient,
-                              fontWeight: FontWeight.bold,
-                            ),
+                        style:
+                            Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                  color: onGradient,
+                                  fontWeight: FontWeight.bold,
+                                ),
                       ),
                       if (subtitle != null) ...[
                         const SizedBox(height: AppSpacing.xs),
                         Text(
                           subtitle!,
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyMedium
-                              ?.copyWith(
-                                color: onGradient.withValues(alpha: 0.9),
-                              ),
+                          style:
+                              Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: onGradient.withValues(alpha: 0.9),
+                                  ),
                         ),
                       ],
                     ],
@@ -144,7 +140,8 @@ class _PremiumCardState extends State<PremiumCard> {
     );
     if (widget.onTap == null) return content;
 
-    final reduceMotion = MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    final reduceMotion =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
     return GestureDetector(
       onTapDown: (_) => setState(() => _pressed = true),
       onTapUp: (_) => setState(() => _pressed = false),
@@ -244,7 +241,8 @@ class Reveal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final reduceMotion = MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+    final reduceMotion =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
     if (reduceMotion) return child;
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: 1),

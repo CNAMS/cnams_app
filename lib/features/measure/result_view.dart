@@ -48,8 +48,8 @@ class ResultView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final referralAdvised = classification == GrowthClass.sam ||
-        classification == GrowthClass.mam;
+    final referralAdvised =
+        classification == GrowthClass.sam || classification == GrowthClass.mam;
 
     return Column(
       children: [
@@ -119,8 +119,7 @@ class ResultScreen extends ConsumerWidget {
         whz: measurement.whz,
         footer: referralAdvised
             ? FilledButton.icon(
-                onPressed: () =>
-                    raiseReferral(context, ref, measurement.id),
+                onPressed: () => raiseReferral(context, ref, measurement.id),
                 icon: const Icon(Icons.assignment_ind_outlined),
                 label: Text(l10n.referralRaise),
                 style: FilledButton.styleFrom(
@@ -151,9 +150,9 @@ class _ZRow extends StatelessWidget {
           Text(
             z == null ? '—' : z.toStringAsFixed(2), // i18n-ignore: numeric
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                ),
+              fontWeight: FontWeight.bold,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
           ),
         ],
       ),
