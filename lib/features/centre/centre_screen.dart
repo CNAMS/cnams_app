@@ -25,74 +25,86 @@ class CentreScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final roster = ref.watch(rosterProvider);
     final stats = ref.watch(centreStatsProvider);
+    final role = ref.watch(currentRoleProvider);
 
-    return SafeArea(
-      child: roster.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => ErrorView(
-          error: e,
-          onRetry: () => ref.invalidate(rosterProvider),
-        ),
-        data: (entries) {
-          final flagged = entries.where((e) => e.isFlagged).toList();
-          final overdue = entries.where((e) => e.isOverdue).toList();
+    return Column(
+      children: [
+        GradientHeader(role: role, title: l10n.navCentre),
+        Expanded(
+          child: roster.when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (e, _) => ErrorView(
+              error: e,
+              onRetry: () => ref.invalidate(rosterProvider),
+            ),
+            data: (entries) {
+              final flagged = entries.where((e) => e.isFlagged).toList();
+              final overdue = entries.where((e) => e.isOverdue).toList();
 
-          return ListView(
-            padding: const EdgeInsets.all(AppSpacing.xl),
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              return ListView(
+                padding: const EdgeInsets.all(AppSpacing.xl),
                 children: [
-                  Expanded(
-                    child: MetricCard(
-                      icon: Icons.check_circle_outline,
-                      value: '${stats.screenedThisMonth}',
-                      label: l10n.centreScreenedThisMonth,
-                      color: AppTheme.styleFor(GrowthClass.normal).color,
-                    ),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: MetricCard(
+                          icon: Icons.check_circle_outline,
+                          value: '${stats.screenedThisMonth}',
+                          label: l10n.centreScreenedThisMonth,
+                          color: AppTheme.styleFor(GrowthClass.normal).color,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: MetricCard(
+                          icon: Icons.flag_outlined,
+                          value: '${stats.flagged}',
+                          label: l10n.flaggedCount,
+                          color: const Color(0xFFC62828),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: MetricCard(
+                          icon: Icons.schedule,
+                          value: '${stats.overdue}',
+                          label: l10n.overdueCount,
+                          color: const Color(0xFFE68A00),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: MetricCard(
-                      icon: Icons.flag_outlined,
-                      value: '${stats.flagged}',
-                      label: l10n.flaggedCount,
-                      color: const Color(0xFFC62828),
-                    ),
+                  SectionTitle(title: l10n.centreFlaggedChildren),
+                  PremiumCard(
+                    padding:
+                        const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+                    child: flagged.isEmpty
+                        ? _EmptyLine(text: l10n.centreNoneFlagged)
+                        : Column(
+                            children: [
+                              for (final e in flagged) _ChildRow(entry: e)
+                            ],
+                          ),
                   ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: MetricCard(
-                      icon: Icons.schedule,
-                      value: '${stats.overdue}',
-                      label: l10n.overdueCount,
-                      color: const Color(0xFFE68A00),
-                    ),
+                  SectionTitle(title: l10n.centreOverdueChildren),
+                  PremiumCard(
+                    padding:
+                        const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+                    child: overdue.isEmpty
+                        ? _EmptyLine(text: l10n.centreNoneOverdue)
+                        : Column(
+                            children: [
+                              for (final e in overdue) _ChildRow(entry: e)
+                            ],
+                          ),
                   ),
                 ],
-              ),
-              SectionTitle(title: l10n.centreFlaggedChildren),
-              PremiumCard(
-                padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
-                child: flagged.isEmpty
-                    ? _EmptyLine(text: l10n.centreNoneFlagged)
-                    : Column(
-                        children: [for (final e in flagged) _ChildRow(entry: e)],
-                      ),
-              ),
-              SectionTitle(title: l10n.centreOverdueChildren),
-              PremiumCard(
-                padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
-                child: overdue.isEmpty
-                    ? _EmptyLine(text: l10n.centreNoneOverdue)
-                    : Column(
-                        children: [for (final e in overdue) _ChildRow(entry: e)],
-                      ),
-              ),
-            ],
-          );
-        },
-      ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }
