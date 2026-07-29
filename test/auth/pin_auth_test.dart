@@ -34,14 +34,14 @@ void main() {
 
   test('no PIN set initially', () async {
     expect(await auth.isPinSet(), isFalse);
-    expect(await auth.verify('1234'), isFalse);
+    expect((await auth.verify('1234')).ok, isFalse);
   });
 
   test('accepts the correct PIN and rejects a wrong one', () async {
     await auth.setPin('2468');
     expect(await auth.isPinSet(), isTrue);
-    expect(await auth.verify('2468'), isTrue);
-    expect(await auth.verify('1357'), isFalse);
+    expect((await auth.verify('2468')).ok, isTrue);
+    expect((await auth.verify('1357')).ok, isFalse);
   });
 
   test('the raw PIN is never stored', () async {
@@ -62,5 +62,32 @@ void main() {
     await auth.setPin('0000');
     await auth.clear();
     expect(await auth.isPinSet(), isFalse);
+  });
+
+  test('locks out after too many wrong attempts, then a correct PIN clears it',
+      () async {
+    var clock = DateTime.utc(2026, 1, 1, 12);
+    final locking = PinAuth(
+      store,
+      iterations: 500,
+      random: Random(1),
+      now: () => clock,
+    );
+    await locking.setPin('2468');
+
+    // Five wrong tries → locked out.
+    PinVerifyResult? result;
+    for (var i = 0; i < PinAuth.maxAttempts; i++) {
+      result = await locking.verify('0000');
+    }
+    expect(result!.isLocked, isTrue);
+    // Even the correct PIN is refused while locked.
+    expect((await locking.verify('2468')).isLocked, isTrue);
+
+    // After the lockout elapses, the correct PIN works and clears the state.
+    clock = clock.add(const Duration(minutes: 30));
+    final ok = await locking.verify('2468');
+    expect(ok.ok, isTrue);
+    expect(await locking.remainingLockout(), isNull);
   });
 }

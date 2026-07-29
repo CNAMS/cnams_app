@@ -18,6 +18,9 @@ import 'package:cgms_app/core/providers.dart';
 import 'package:cgms_app/core/settings/locale_controller.dart';
 import 'package:cgms_app/features/auth/role_display.dart';
 import 'package:cgms_app/features/export/csv_export.dart';
+import 'package:cgms_app/features/settings/about_screen.dart';
+import 'package:cgms_app/shared/theme/design_tokens.dart';
+import 'package:cgms_app/shared/widgets/premium.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -42,7 +45,18 @@ class SettingsScreen extends ConsumerWidget {
     final dir = await getTemporaryDirectory();
     final file = File(p.join(dir.path, 'cgms_export.csv'));
     await file.writeAsString(csv);
-    await Share.shareXFiles([XFile(file.path)], subject: l10n.exportSubject);
+    try {
+      await Share.shareXFiles([XFile(file.path)], subject: l10n.exportSubject);
+    } finally {
+      // Don't leave the export sitting in the temp dir.
+      if (file.existsSync()) {
+        try {
+          await file.delete();
+        } catch (_) {
+          /* best-effort cleanup */
+        }
+      }
+    }
   }
 
   Future<void> _setPin(BuildContext context, WidgetRef ref) async {
@@ -67,109 +81,108 @@ class SettingsScreen extends ConsumerWidget {
     final pinSet = ref.watch(pinIsSetProvider).valueOrNull ?? false;
     final role = ref.watch(currentRoleProvider);
 
-    return SafeArea(
-      child: ListView(
-        children: [
-          // Account: who's signed in, and sign out.
-          ListTile(
-            leading: CircleAvatar(
-              backgroundColor: roleColor(role).withValues(alpha: 0.15),
-              child: Icon(roleIcon(role), color: roleColor(role)),
+    return ListView(
+      padding: EdgeInsets.zero,
+      children: [
+        GradientHeader(
+          role: role,
+          title: l10n.navSettings,
+          subtitle: roleLabel(l10n, role),
+          leading: CircleAvatar(
+            radius: 24,
+            backgroundColor: Colors.white.withValues(alpha: 0.22),
+            child: Icon(roleIcon(role), color: Colors.white),
+          ),
+          trailing: TextButton.icon(
+            onPressed: () =>
+                ref.read(authControllerProvider.notifier).signOut(),
+            icon: const Icon(Icons.logout, color: Colors.white, size: 18),
+            label:
+                Text(l10n.signOut, style: const TextStyle(color: Colors.white)),
+          ),
+        ),
+        Reveal(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.xl),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SectionTitle(title: l10n.settingsLanguage),
+                PremiumCard(
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+                  child: Column(
+                    children: [
+                      _LanguageOption(
+                        label: l10n.languageHindi,
+                        selected: locale.languageCode == 'hi',
+                        onTap: () => controller.setLocale(const Locale('hi')),
+                      ),
+                      _LanguageOption(
+                        label: l10n.languageEnglish,
+                        selected: locale.languageCode == 'en',
+                        onTap: () => controller.setLocale(const Locale('en')),
+                      ),
+                    ],
+                  ),
+                ),
+                SectionTitle(title: l10n.settingsDataSecurity),
+                PremiumCard(
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+                  child: Column(
+                    children: [
+                      ListTile(
+                        leading: const Icon(Icons.sync),
+                        title: Text(l10n.syncBacklog),
+                        trailing: Text(
+                          '${counts.valueOrNull?.pending ?? 0}', // i18n-ignore: count
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      const Divider(height: 1),
+                      ListTile(
+                        leading: const Icon(Icons.error_outline),
+                        title: Text(l10n.syncDeadLetter),
+                        trailing: Text(
+                          '${counts.valueOrNull?.deadLetter ?? 0}', // i18n-ignore: count
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      const Divider(height: 1),
+                      ListTile(
+                        leading: const Icon(Icons.table_view),
+                        title: Text(l10n.exportCsv),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => _exportCsv(context, ref),
+                      ),
+                      const Divider(height: 1),
+                      ListTile(
+                        leading: const Icon(Icons.pin),
+                        title: Text(pinSet ? l10n.pinChange : l10n.pinSet),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => _setPin(context, ref),
+                      ),
+                    ],
+                  ),
+                ),
+                SectionTitle(title: l10n.settingsAbout),
+                PremiumCard(
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+                  child: ListTile(
+                    leading: const Icon(Icons.info_outline),
+                    title: Text(l10n.settingsAbout),
+                    subtitle: Text(l10n.settingsAboutSubtitle),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                          builder: (_) => const AboutScreen()),
+                    ),
+                  ),
+                ),
+              ],
             ),
-            title: Text(roleLabel(l10n, role)),
-            trailing: TextButton.icon(
-              onPressed: () =>
-                  ref.read(authControllerProvider.notifier).signOut(),
-              icon: const Icon(Icons.logout),
-              label: Text(l10n.signOut),
-            ),
           ),
-          const Divider(),
-          _SectionHeader(
-            icon: Icons.language,
-            title: l10n.settingsLanguage,
-            subtitle: l10n.settingsLanguageSubtitle,
-          ),
-          _LanguageOption(
-            label: l10n.languageHindi,
-            selected: locale.languageCode == 'hi',
-            onTap: () => controller.setLocale(const Locale('hi')),
-          ),
-          _LanguageOption(
-            label: l10n.languageEnglish,
-            selected: locale.languageCode == 'en',
-            onTap: () => controller.setLocale(const Locale('en')),
-          ),
-          const Divider(),
-          _SectionHeader(
-            icon: Icons.security,
-            title: l10n.settingsDataSecurity,
-          ),
-          ListTile(
-            leading: const Icon(Icons.sync),
-            title: Text(l10n.syncBacklog),
-            trailing: Text(
-              '${counts.valueOrNull?.pending ?? 0}', // i18n-ignore: count
-            ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.error_outline),
-            title: Text(l10n.syncDeadLetter),
-            trailing: Text(
-              '${counts.valueOrNull?.deadLetter ?? 0}', // i18n-ignore: count
-            ),
-          ),
-          ListTile(
-            leading: const Icon(Icons.table_view),
-            title: Text(l10n.exportCsv),
-            onTap: () => _exportCsv(context, ref),
-          ),
-          ListTile(
-            leading: const Icon(Icons.pin),
-            title: Text(pinSet ? l10n.pinChange : l10n.pinSet),
-            onTap: () => _setPin(context, ref),
-          ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.info_outline),
-            title: Text(l10n.settingsAbout),
-            subtitle: Text(l10n.settingsAboutSubtitle),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({
-    required this.icon,
-    required this.title,
-    this.subtitle,
-  });
-
-  final IconData icon;
-  final String title;
-  final String? subtitle;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
-      child: Row(
-        children: [
-          Icon(icon),
-          const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title, style: Theme.of(context).textTheme.titleMedium),
-              if (subtitle != null)
-                Text(subtitle!, style: Theme.of(context).textTheme.bodySmall),
-            ],
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

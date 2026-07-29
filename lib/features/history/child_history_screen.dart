@@ -15,7 +15,12 @@ import 'package:cgms_app/features/history/growth_chart.dart';
 import 'package:cgms_app/features/history/growth_series.dart';
 import 'package:cgms_app/features/history/parent_card_screen.dart';
 import 'package:cgms_app/features/measure/capture_flow_screen.dart';
+import 'package:cgms_app/features/measure/result_view.dart';
+import 'package:cgms_app/features/referral/referral_ui.dart';
+import 'package:cgms_app/features/roster/child_registration_screen.dart';
 import 'package:cgms_app/shared/theme/app_theme.dart';
+import 'package:cgms_app/shared/widgets/empty_state.dart';
+import 'package:cgms_app/shared/widgets/error_view.dart';
 
 class ChildHistoryScreen extends ConsumerWidget {
   const ChildHistoryScreen({required this.child, super.key});
@@ -34,6 +39,37 @@ class ChildHistoryScreen extends ConsumerWidget {
         GrowthClass.overweight => l10n.resultOverweight,
         GrowthClass.indeterminate => l10n.resultIndeterminate,
       };
+
+  // Consent-withdrawal path: confirm, then soft-delete + queue a server delete,
+  // and leave the screen (the child drops off the roster).
+  Future<void> _withdrawConsent(
+    BuildContext context,
+    WidgetRef ref,
+    Child child,
+  ) async {
+    final l10n = AppLocalizations.of(context)!;
+    final navigator = Navigator.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text(l10n.withdrawConsent),
+        content: Text(l10n.withdrawConsentConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(l10n.withdrawConsent),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    await ref.read(childRepositoryProvider).withdrawConsent(child.id);
+    navigator.pop();
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -67,6 +103,30 @@ class ChildHistoryScreen extends ConsumerWidget {
                 );
               },
             ),
+          IconButton(
+            tooltip: l10n.editTitle,
+            icon: const Icon(Icons.edit_outlined),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => ChildRegistrationScreen(
+                  centreId: child.centreId,
+                  existing: child,
+                ),
+              ),
+            ),
+          ),
+          PopupMenuButton<String>(
+            tooltip: l10n.a11yMoreActions,
+            onSelected: (v) {
+              if (v == 'withdraw') _withdrawConsent(context, ref, child);
+            },
+            itemBuilder: (_) => [
+              PopupMenuItem(
+                value: 'withdraw',
+                child: Text(l10n.withdrawConsent),
+              ),
+            ],
+          ),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -80,10 +140,24 @@ class ChildHistoryScreen extends ConsumerWidget {
       ),
       body: measurements.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('$e')), // i18n-ignore: diagnostic
+        error: (e, _) => ErrorView(
+          error: e,
+          onRetry: () => ref.invalidate(measurementsProvider(child.id)),
+        ),
         data: (rows) {
           if (rows.isEmpty) {
-            return Center(child: Text(l10n.historyNoVisits));
+            return EmptyState(
+              message: l10n.historyNoVisits,
+              action: FilledButton.icon(
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => CaptureFlowScreen(child: child),
+                  ),
+                ),
+                icon: const Icon(Icons.straighten),
+                label: Text(l10n.newMeasurement),
+              ),
+            );
           }
           final latest = rows.first; // newest first
           final latestClass = _classOf(latest.classification);
@@ -106,7 +180,23 @@ class ChildHistoryScreen extends ConsumerWidget {
               _LatestBanner(
                 classification: latestClass,
                 label: _label(l10n, latestClass),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => ResultScreen(measurement: latest),
+                  ),
+                ),
               ),
+              // Referral is advised for SAM/MAM — the worker acts on it.
+              if (latestClass == GrowthClass.sam ||
+                  latestClass == GrowthClass.mam)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  child: FilledButton.tonalIcon(
+                    onPressed: () => raiseReferral(context, ref, latest.id),
+                    icon: const Icon(Icons.assignment_ind_outlined),
+                    label: Text(l10n.referralRaise),
+                  ),
+                ),
               _Section(title: l10n.historyGrowthCurve),
               SizedBox(
                 height: 260,
@@ -119,6 +209,8 @@ class ChildHistoryScreen extends ConsumerWidget {
                   ),
                 ),
               ),
+              _Section(title: l10n.referralsSection),
+              ReferralsList(childId: child.id),
               _Section(title: l10n.historyPreviousVisits),
               for (final m in rows)
                 _VisitTile(
@@ -136,30 +228,51 @@ class ChildHistoryScreen extends ConsumerWidget {
 }
 
 class _LatestBanner extends StatelessWidget {
-  const _LatestBanner({required this.classification, required this.label});
+  const _LatestBanner({
+    required this.classification,
+    required this.label,
+    this.onTap,
+  });
 
   final GrowthClass classification;
   final String label;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final style = AppTheme.styleFor(classification);
-    return Container(
+    final l10n = AppLocalizations.of(context)!;
+    return Material(
       color: style.color,
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-      child: Row(
-        children: [
-          Icon(style.icon, color: style.onColor),
-          const SizedBox(width: 12),
-          Text(
-            label,
-            style: TextStyle(
-              color: style.onColor,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
+      child: InkWell(
+        onTap: onTap,
+        // Icon-only chevron aside, the row reads its label; when tappable it's a
+        // button that opens the full result, so say so for screen readers.
+        child: Semantics(
+          button: onTap != null,
+          label: onTap == null ? label : '$label, ${l10n.a11yViewResult}',
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+            child: Row(
+              children: [
+                Icon(style.icon, color: style.onColor),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      color: style.onColor,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                if (onTap != null)
+                  Icon(Icons.chevron_right, color: style.onColor),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }

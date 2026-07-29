@@ -38,23 +38,47 @@ class AuthController extends AsyncNotifier<AuthSession?> {
       _api.requestOtp(channel, destination);
 
   Future<void> verifyOtp(OtpChallenge challenge, String code, AppRole role) =>
-      _complete(() => _api.verifyOtp(challenge, code, role));
+      _completeOrThrow(() => _api.verifyOtp(challenge, code, role));
 
   Future<void> signInWithGoogle(AppRole role) =>
       _complete(() => _api.signInWithGoogle(role));
+
+  /// Sign in (or create) with email + password. Throws [AuthException] on bad
+  /// input or a wrong password.
+  Future<void> signInWithPassword(
+          String email, String password, AppRole role) =>
+      _completeOrThrow(() => _api.signInWithPassword(email, password, role));
 
   Future<void> _complete(Future<AuthSession> Function() run) async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       final session = await run();
-      await ref.read(secureStoreProvider).write(_sessionKey, session.encode());
-      ref.read(currentRoleProvider.notifier).state = session.role;
+      await _persist(session);
       return session;
     });
   }
 
+  /// Like [_complete] but rethrows on failure and leaves the auth state
+  /// unchanged, so the entry screen can show an inline error rather than the
+  /// whole flow bouncing back to sign-in.
+  Future<void> _completeOrThrow(Future<AuthSession> Function() run) async {
+    final session = await run();
+    await _persist(session);
+    state = AsyncData(session);
+  }
+
+  Future<void> _persist(AuthSession session) async {
+    await ref.read(secureStoreProvider).write(_sessionKey, session.encode());
+    ref.read(currentRoleProvider.notifier).state = session.role;
+  }
+
   Future<void> signOut() async {
     await ref.read(secureStoreProvider).delete(_sessionKey);
+    // Reset session-scoped state so the next sign-in starts clean — critically,
+    // clear the PIN-unlock flag so a different user can't inherit an unlocked
+    // session, and reset the role back to the default.
+    ref.read(sessionUnlockedProvider.notifier).state = false;
+    ref.read(currentRoleProvider.notifier).state = AppRole.aww;
     state = const AsyncData(null);
   }
 }

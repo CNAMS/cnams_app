@@ -12,8 +12,11 @@ import 'package:cgms_app/core/auth/auth_controller.dart';
 import 'package:cgms_app/core/auth/auth_models.dart';
 import 'package:cgms_app/core/l10n/generated/app_localizations.dart';
 import 'package:cgms_app/features/auth/otp_screen.dart';
+import 'package:cgms_app/features/auth/password_screen.dart';
 import 'package:cgms_app/features/auth/role_display.dart';
 import 'package:cgms_app/features/onboarding/sprout_mark.dart';
+import 'package:cgms_app/shared/theme/design_tokens.dart';
+import 'package:cgms_app/shared/widgets/premium.dart';
 
 class SignInScreen extends ConsumerStatefulWidget {
   const SignInScreen({super.key});
@@ -33,85 +36,137 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     );
   }
 
+  void _startPassword() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => PasswordScreen(role: _role),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 
     return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 460),
-            child: ListView(
-              shrinkWrap: true,
-              padding: const EdgeInsets.all(24),
-              children: [
-                Center(
-                  child:
-                      SproutMark(size: 56, stroke: theme.colorScheme.primary),
-                ),
-                const SizedBox(height: 12),
-                Center(
-                  child: Text(
-                    l10n.signIn,
-                    style: theme.textTheme.headlineSmall
-                        ?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Text(l10n.whoAreYou, style: theme.textTheme.labelLarge),
-                const SizedBox(height: 8),
-                _RoleGrid(
-                  selected: _role,
-                  onSelect: (r) => setState(() => _role = r),
-                ),
-                const SizedBox(height: 20),
-                FilledButton.icon(
-                  onPressed: () => ref
-                      .read(authControllerProvider.notifier)
-                      .signInWithGoogle(_role),
-                  icon: const Icon(Icons.g_mobiledata, size: 28),
-                  label: Text(l10n.continueWithGoogle),
-                  style: FilledButton.styleFrom(
-                    minimumSize: const Size.fromHeight(52),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Row(
+      body: Column(
+        children: [
+          // A role-tinted hero that recolours as you pick a role — the app
+          // shows you its per-role identity before you even sign in.
+          GradientHeader(
+            role: _role,
+            title: l10n.signIn,
+            subtitle: l10n.welcomeTagline,
+            leading: const SproutMark(
+              size: 44,
+              stroke: Colors.white,
+              leafLight: Color(0xFF8FD3C6),
+              leafDark: Color(0xFFB8E4C9),
+            ),
+          ),
+          Expanded(
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 460),
+                child: ListView(
+                  padding: const EdgeInsets.all(AppSpacing.xl),
                   children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () => _startOtp(OtpChannel.phone),
-                        icon: const Icon(Icons.phone_android),
-                        label: Text(l10n.signInPhoneOtp),
+                    PremiumCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(l10n.whoAreYou,
+                              style: theme.textTheme.labelLarge),
+                          const SizedBox(height: AppSpacing.md),
+                          _RoleGrid(
+                            selected: _role,
+                            onSelect: (r) => setState(() => _role = r),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () => _startOtp(OtpChannel.email),
-                        icon: const Icon(Icons.alternate_email),
-                        label: Text(l10n.signInEmailOtp),
+                    const SizedBox(height: AppSpacing.xl),
+                    FilledButton.icon(
+                      onPressed: () => ref
+                          .read(authControllerProvider.notifier)
+                          .signInWithGoogle(_role),
+                      icon: const Icon(Icons.g_mobiledata, size: 28),
+                      label: Text(l10n.continueWithGoogle),
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size.fromHeight(54),
                       ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () => _startOtp(OtpChannel.phone),
+                            icon: const Icon(Icons.phone_android),
+                            label: Text(l10n.signInPhoneOtp),
+                            style: OutlinedButton.styleFrom(
+                              minimumSize: const Size.fromHeight(48),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () => _startOtp(OtpChannel.email),
+                            icon: const Icon(Icons.alternate_email),
+                            label: Text(l10n.signInEmailOtp),
+                            style: OutlinedButton.styleFrom(
+                              minimumSize: const Size.fromHeight(48),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    OutlinedButton.icon(
+                      onPressed: _startPassword,
+                      icon: const Icon(Icons.password),
+                      label: Text(l10n.signInPassword),
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(48),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.lock_outline,
+                          size: 15,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: AppSpacing.xs),
+                        Flexible(
+                          child: Text(
+                            l10n.signInPinNote,
+                            textAlign: TextAlign.center,
+                            style: theme.textTheme.bodySmall,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-                const SizedBox(height: 18),
-                Text(
-                  l10n.signInPinNote,
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.bodySmall,
-                ),
-              ],
+              ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
 }
 
+/// A symmetric 2-column grid of role cards — every cell the same width and
+/// height regardless of which role is selected or how long its label is (so
+/// the layout no longer shifts between AWW and the shorter roles). The last
+/// odd role fills its own cell and an empty one keeps the column aligned.
 class _RoleGrid extends StatelessWidget {
   const _RoleGrid({required this.selected, required this.onSelect});
 
@@ -121,19 +176,42 @@ class _RoleGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: [
-        for (final role in AppRole.values)
-          _RoleChip(
-            role: role,
-            label: roleLabel(l10n, role),
-            selected: role == selected,
-            onTap: () => onSelect(role),
+    const roles = AppRole.values;
+    final rows = <Widget>[];
+    for (var i = 0; i < roles.length; i += 2) {
+      final left = roles[i];
+      final right = (i + 1 < roles.length) ? roles[i + 1] : null;
+      rows.add(
+        Padding(
+          padding: EdgeInsets.only(top: i == 0 ? 0 : AppSpacing.sm),
+          child: Row(
+            children: [
+              Expanded(
+                child: _RoleChip(
+                  role: left,
+                  label: roleLabel(l10n, left),
+                  selected: left == selected,
+                  onTap: () => onSelect(left),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              // Empty cell keeps the last odd item the same width as the rest.
+              Expanded(
+                child: right == null
+                    ? const SizedBox.shrink()
+                    : _RoleChip(
+                        role: right,
+                        label: roleLabel(l10n, right),
+                        selected: right == selected,
+                        onTap: () => onSelect(right),
+                      ),
+              ),
+            ],
           ),
-      ],
-    );
+        ),
+      );
+    }
+    return Column(children: rows);
   }
 }
 
@@ -153,31 +231,39 @@ class _RoleChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = roleColor(role);
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: selected ? color.withValues(alpha: 0.12) : null,
-          border: Border.all(
-            color: selected ? color : Theme.of(context).dividerColor,
-            width: selected ? 2 : 1,
-          ),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(roleIcon(role), size: 18, color: color),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: TextStyle(
-                fontWeight: selected ? FontWeight.bold : FontWeight.normal,
-              ),
+    return Material(
+      color: selected ? color.withValues(alpha: 0.12) : Colors.transparent,
+      borderRadius: AppRadius.allMd,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: AppRadius.allMd,
+        child: Container(
+          height: 56,
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: selected ? color : Theme.of(context).dividerColor,
+              width: selected ? 2 : 1,
             ),
-          ],
+            borderRadius: AppRadius.allMd,
+          ),
+          child: Row(
+            children: [
+              Icon(roleIcon(role), size: 20, color: color),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+                    height: 1.1,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

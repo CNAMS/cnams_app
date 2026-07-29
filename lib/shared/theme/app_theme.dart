@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:cgms_app/core/auth/app_role.dart';
 import 'package:cgms_app/core/zscore/classification.dart';
+import 'package:cgms_app/shared/theme/design_tokens.dart';
 
 /// Ankur's theme — one brand, tuned per role.
 ///
@@ -49,9 +50,32 @@ class AppTheme {
           TargetPlatform.macOS: FadeForwardsPageTransitionsBuilder(),
         },
       ),
+      // Premium geometry (U1): softer, larger radii on the common surfaces so
+      // even screens not yet migrated to the premium widgets inherit the shape.
+      cardTheme: base.cardTheme.copyWith(
+        elevation: 0,
+        clipBehavior: Clip.antiAlias,
+        shape: const RoundedRectangleBorder(borderRadius: AppRadius.allLg),
+        margin: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+      ),
+      inputDecorationTheme: base.inputDecorationTheme.copyWith(
+        border: const OutlineInputBorder(borderRadius: AppRadius.allMd),
+        enabledBorder: const OutlineInputBorder(borderRadius: AppRadius.allMd),
+        focusedBorder: const OutlineInputBorder(borderRadius: AppRadius.allMd),
+      ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          shape: const RoundedRectangleBorder(borderRadius: AppRadius.allMd),
+          textStyle: const TextStyle(
+            fontSize: baseFontSize,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           minimumSize: const Size(minTouchTarget, minTouchTarget),
+          shape: const RoundedRectangleBorder(borderRadius: AppRadius.allMd),
           textStyle: const TextStyle(
             fontSize: baseFontSize,
             fontWeight: FontWeight.w600,

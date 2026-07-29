@@ -48,6 +48,8 @@ against the reference implementation.
 - [Ankur experience roadmap](docs/ANKUR_EXPERIENCE_ROADMAP.md) — brand, landing, role-based auth +
   Google OAuth, dashboards, theme (EX0–EX5).
 - [Leftover / backlog](docs/LEFTOVER.md) — everything still outstanding across all phases.
+- [Updates & cross-team handoff](docs/UPDATES.md) — what's done and what the Data,
+  IoT/Hardware, Backend and Clinical tracks need to deliver (with the exact code seams).
 
 ## Getting started
 

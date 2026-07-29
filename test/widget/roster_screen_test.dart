@@ -100,4 +100,58 @@ void main() {
     await _pumpRoster(tester, []);
     expect(find.text('अभी तक कोई बच्चा नहीं जोड़ा गया'), findsOneWidget);
   });
+
+  testWidgets('the clear button empties the search field', (tester) async {
+    await _pumpRoster(tester, [
+      RosterEntry(
+        child: _child('1', 'Aarav', 'Sita'),
+        lastMeasuredAt: null,
+        isOverdue: false,
+      ),
+    ]);
+
+    await tester.enterText(find.byType(TextField).first, 'xyz');
+    await tester.pump();
+    expect(find.text('Aarav'), findsNothing); // filtered out
+
+    await tester.tap(find.byIcon(Icons.clear));
+    await tester.pump();
+    expect(find.text('Aarav'), findsOneWidget); // back after clearing
+  });
+
+  testWidgets('flagged-first sort puts a SAM child above a normal one',
+      (tester) async {
+    await _pumpRoster(tester, [
+      RosterEntry(
+        child: _child('1', 'Zara', 'Sita'), // alphabetically last
+        lastMeasuredAt: DateTime.utc(2026, 6, 1),
+        isOverdue: false,
+        lastClassification: 'sam',
+      ),
+      RosterEntry(
+        child: _child('2', 'Aarav', 'Ram'), // alphabetically first
+        lastMeasuredAt: DateTime.utc(2026, 6, 1),
+        isOverdue: false,
+        lastClassification: 'normal',
+      ),
+    ]);
+
+    // Default (name) order: Aarav before Zara.
+    final titles = find.byType(ListTile);
+    expect(
+      tester.widget<ListTile>(titles.first).title,
+      isA<Text>().having((t) => t.data, 'name', 'Aarav'),
+    );
+
+    // Switch to flagged-first: the SAM child (Zara) rises to the top.
+    await tester.tap(find.byIcon(Icons.sort));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('पहले चिह्नित'));
+    await tester.pumpAndSettle();
+
+    expect(
+      tester.widget<ListTile>(find.byType(ListTile).first).title,
+      isA<Text>().having((t) => t.data, 'name', 'Zara'),
+    );
+  });
 }

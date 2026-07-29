@@ -1,15 +1,19 @@
-// Doctor dashboard (EX3): the inbox of referred SAM/MAM cases, each with the
-// child, age, centre and severity, filterable by severity.
+// Doctor dashboard (EX3), premium treatment (U5): the inbox of referred
+// SAM/MAM cases, each with the child, age, centre and severity.
 //
 // Sample cases until referrals flow through the server; the real list reads the
-// referrals + measurements already in the data layer once cases exist.
+// referrals + measurements already in the data layer once cases exist. The
+// layout and components are production-ready.
 //
-// See docs/ANKUR_EXPERIENCE_ROADMAP.md — EX3.
+// See docs/PREMIUM_UI_ROADMAP.md — U5.
 
 import 'package:flutter/material.dart';
 
+import 'package:cgms_app/core/auth/app_role.dart';
 import 'package:cgms_app/core/l10n/generated/app_localizations.dart';
 import 'package:cgms_app/features/dashboard/dashboard_widgets.dart';
+import 'package:cgms_app/shared/theme/design_tokens.dart';
+import 'package:cgms_app/shared/widgets/premium.dart';
 
 class _Case {
   const _Case(this.name, this.age, this.centre, this.detail, this.severe);
@@ -36,39 +40,36 @@ class DoctorDashboard extends StatelessWidget {
     final samCount = _cases.where((c) => c.severe).length;
     final mamCount = _cases.length - samCount;
 
-    return SafeArea(
-      child: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  l10n.dashReferredCases,
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-              ),
-              const SampleChip(),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
+    return ListView(
+      padding: EdgeInsets.zero,
+      children: [
+        GradientHeader(
+          role: AppRole.doctor,
+          title: l10n.dashReferredCases,
+          trailing: const HeaderSampleTag(),
+          bottom: Row(
             children: [
               _SeverityPill(
                 label: '${l10n.resultSam} · $samCount',
                 color: const Color(0xFFC62828),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AppSpacing.sm),
               _SeverityPill(
                 label: '${l10n.resultMam} · $mamCount',
                 color: const Color(0xFFE68A00),
               ),
             ],
           ),
-          const SizedBox(height: 6),
-          for (final c in _cases) _CaseTile(c: c),
-        ],
-      ),
+        ),
+        Reveal(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.xl),
+            child: Column(
+              children: [for (final c in _cases) _CaseCard(c: c)],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -81,10 +82,13 @@ class _SeverityPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: 7,
+      ),
       decoration: BoxDecoration(
         color: color,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: AppRadius.allPill,
       ),
       child: Text(
         label,
@@ -95,28 +99,79 @@ class _SeverityPill extends StatelessWidget {
   }
 }
 
-class _CaseTile extends StatelessWidget {
-  const _CaseTile({required this.c});
+class _CaseCard extends StatelessWidget {
+  const _CaseCard({required this.c});
   final _Case c;
 
   @override
   Widget build(BuildContext context) {
     final color = c.severe ? const Color(0xFFC62828) : const Color(0xFFE68A00);
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: color.withValues(alpha: 0.15),
-          child: Text(
-            c.name.characters.first, // i18n-ignore: sample child initial
-            style: TextStyle(color: color, fontWeight: FontWeight.bold),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+      child: PremiumCard(
+        onTap: () {},
+        padding: EdgeInsets.zero,
+        child: IntrinsicHeight(
+          child: Row(
+            children: [
+              // A severity stripe down the leading edge.
+              Container(
+                width: 5,
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: const BorderRadius.horizontal(
+                    left: AppRadius.lg,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.md,
+                  ),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        backgroundColor: color.withValues(alpha: 0.15),
+                        child: Text(
+                          // i18n-ignore: sample child initial
+                          c.name.characters.first,
+                          style: TextStyle(
+                            color: color,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              c.name, // i18n-ignore: sample child name
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.w600),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              // i18n-ignore: sample detail
+                              '${c.age} · ${c.centre} · ${c.detail}',
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(Icons.chevron_right, color: color),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
-        title: Text(c.name), // i18n-ignore: sample child name
-        subtitle: Text(
-          '${c.age} · ${c.centre} · ${c.detail}', // i18n-ignore: sample detail
-        ),
-        trailing: Icon(Icons.chevron_right, color: color),
       ),
     );
   }

@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:cgms_app/core/auth/auth_controller.dart';
 import 'package:cgms_app/core/l10n/generated/app_localizations.dart';
 import 'package:cgms_app/core/providers.dart';
 
@@ -19,7 +20,7 @@ class PinUnlockScreen extends ConsumerStatefulWidget {
 
 class _PinUnlockScreenState extends ConsumerState<PinUnlockScreen> {
   final _pin = TextEditingController();
-  bool _error = false;
+  String? _errorMsg;
   bool _checking = false;
 
   @override
@@ -31,15 +32,18 @@ class _PinUnlockScreenState extends ConsumerState<PinUnlockScreen> {
   Future<void> _submit() async {
     setState(() {
       _checking = true;
-      _error = false;
+      _errorMsg = null;
     });
-    final ok = await ref.read(pinAuthProvider).verify(_pin.text.trim());
+    final l10n = AppLocalizations.of(context)!;
+    final result = await ref.read(pinAuthProvider).verify(_pin.text.trim());
     if (!mounted) return;
-    if (ok) {
+    if (result.ok) {
       ref.read(sessionUnlockedProvider.notifier).state = true;
     } else {
       setState(() {
-        _error = true;
+        _errorMsg = result.isLocked
+            ? l10n.pinLockedFor(result.lockedFor!.inSeconds)
+            : l10n.pinWrong;
         _checking = false;
         _pin.clear();
       });
@@ -76,7 +80,7 @@ class _PinUnlockScreenState extends ConsumerState<PinUnlockScreen> {
                   onSubmitted: (_) => _submit(),
                   decoration: InputDecoration(
                     counterText: '',
-                    errorText: _error ? l10n.pinWrong : null,
+                    errorText: _errorMsg,
                     border: const OutlineInputBorder(),
                   ),
                 ),
@@ -87,6 +91,15 @@ class _PinUnlockScreenState extends ConsumerState<PinUnlockScreen> {
                     minimumSize: const Size.fromHeight(52),
                   ),
                   child: Text(l10n.pinUnlock),
+                ),
+                const SizedBox(height: 8),
+                // Escape hatch: never trap a user on the PIN screen — they can
+                // sign out and use a different account.
+                TextButton.icon(
+                  onPressed: () =>
+                      ref.read(authControllerProvider.notifier).signOut(),
+                  icon: const Icon(Icons.logout),
+                  label: Text(l10n.signOut),
                 ),
               ],
             ),

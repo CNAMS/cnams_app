@@ -14,6 +14,7 @@ import 'package:cgms_app/core/ble/mock_device_client.dart';
 import 'package:cgms_app/core/data/centre_repository.dart';
 import 'package:cgms_app/core/data/child_repository.dart';
 import 'package:cgms_app/core/data/measurement_repository.dart';
+import 'package:cgms_app/core/data/referral_repository.dart';
 import 'package:cgms_app/core/db/app_database.dart';
 import 'package:cgms_app/core/reference/reference_loader.dart';
 import 'package:cgms_app/core/zscore/reference_tables.dart';
@@ -46,6 +47,16 @@ final measurementRepositoryProvider = Provider<MeasurementRepository>(
   (ref) => MeasurementRepository(ref.watch(appDatabaseProvider)),
 );
 
+final referralRepositoryProvider = Provider<ReferralRepository>(
+  (ref) => ReferralRepository(ref.watch(appDatabaseProvider)),
+);
+
+/// A child's referrals, newest first.
+final referralsProvider =
+    StreamProvider.family<List<Referral>, String>((ref, childId) {
+  return ref.watch(referralRepositoryProvider).watchForChild(childId);
+});
+
 /// The measuring device. P2 always returns the mock; P3 swaps in the real
 /// flutter_blue_plus client behind the same interface.
 final deviceClientProvider = Provider<DeviceClient>(
@@ -68,6 +79,34 @@ final rosterProvider = StreamProvider<List<RosterEntry>>((ref) async* {
 final measurementsProvider =
     StreamProvider.family<List<Measurement>, String>((ref, childId) {
   return ref.watch(measurementRepositoryProvider).watchForChild(childId);
+});
+
+/// Centre rollup counts (AWW centre view), derived from the live roster.
+typedef CentreStats = ({
+  int total,
+  int screenedThisMonth,
+  int flagged,
+  int overdue
+});
+
+final centreStatsProvider = Provider<CentreStats>((ref) {
+  final roster = ref.watch(rosterProvider).valueOrNull ?? const [];
+  final now = DateTime.now();
+  final monthStart = DateTime(now.year, now.month);
+  var screened = 0, flagged = 0, overdue = 0;
+  for (final e in roster) {
+    if (e.lastMeasuredAt != null && !e.lastMeasuredAt!.isBefore(monthStart)) {
+      screened++;
+    }
+    if (e.isFlagged) flagged++;
+    if (e.isOverdue) overdue++;
+  }
+  return (
+    total: roster.length,
+    screenedThisMonth: screened,
+    flagged: flagged,
+    overdue: overdue,
+  );
 });
 
 /// The bundled WHO reference tables, loaded once from assets.
@@ -106,6 +145,11 @@ final currentRoleProvider = StateProvider<AppRole>((ref) => AppRole.aww);
 /// Whether the launch splash has finished this session (not persisted).
 /// Tests override this to skip the splash animation.
 final splashShownProvider = StateProvider<bool>((ref) => false);
+
+/// Whether the first-run welcome/landing screen has been dismissed this session
+/// (not persisted). Only shown before a language has ever been chosen, so
+/// returning users never see it.
+final welcomeShownProvider = StateProvider<bool>((ref) => false);
 
 /// Whether the user has explicitly chosen a language (persisted). Until then the
 /// first-run flow shows the language screen.

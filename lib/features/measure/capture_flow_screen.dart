@@ -10,16 +10,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:cgms_app/core/app_info.dart';
+import 'package:cgms_app/core/auth/auth_controller.dart';
 import 'package:cgms_app/core/ble/device_client.dart';
 import 'package:cgms_app/core/db/app_database.dart';
 import 'package:cgms_app/core/l10n/generated/app_localizations.dart';
 import 'package:cgms_app/core/providers.dart';
-import 'package:cgms_app/core/zscore/classification.dart';
 import 'package:cgms_app/features/measure/capture_controller.dart';
-import 'package:cgms_app/shared/widgets/classification_banner.dart';
-
-const String _workerId = 'local-worker'; // real worker id arrives with P4 PIN
-const String _appVersion = '0.1.0';
+import 'package:cgms_app/features/measure/result_view.dart';
+import 'package:cgms_app/shared/widgets/error_view.dart';
 
 class CaptureFlowScreen extends ConsumerStatefulWidget {
   const CaptureFlowScreen({required this.child, super.key});
@@ -51,12 +50,16 @@ class _CaptureFlowScreenState extends ConsumerState<CaptureFlowScreen> {
 
   CaptureController _ensureController() {
     final engine = ref.read(zscoreEngineProvider).requireValue;
+    // Attribute the measurement to the signed-in user; fall back to a device
+    // label if somehow unauthenticated.
+    final workerId =
+        ref.read(authControllerProvider).valueOrNull?.userId ?? 'local-device';
     return _controller ??= CaptureController(
       child: widget.child,
       engine: engine,
       repository: ref.read(measurementRepositoryProvider),
-      workerId: _workerId,
-      appVersion: _appVersion,
+      workerId: workerId,
+      appVersion: appVersion,
       deviceSerial: _device.deviceSerial,
     );
   }
@@ -74,7 +77,10 @@ class _CaptureFlowScreenState extends ConsumerState<CaptureFlowScreen> {
       ),
       body: engine.when(
         loading: () => _Connecting(message: l10n.captureConnecting),
-        error: (e, _) => Center(child: Text('$e')), // i18n-ignore: diagnostic
+        error: (e, _) => ErrorView(
+          error: e,
+          onRetry: () => ref.invalidate(zscoreEngineProvider),
+        ),
         data: (_) {
           final controller = _ensureController();
           _measuredLying =
@@ -383,81 +389,27 @@ class _ResultStep extends StatelessWidget {
   final CaptureController controller;
   final AppLocalizations l10n;
 
-  String _label(GrowthClass c) {
-    switch (c) {
-      case GrowthClass.normal:
-        return l10n.resultNormal;
-      case GrowthClass.mam:
-        return l10n.resultMam;
-      case GrowthClass.sam:
-        return l10n.resultSam;
-      case GrowthClass.overweight:
-        return l10n.resultOverweight;
-      case GrowthClass.indeterminate:
-        return l10n.resultIndeterminate;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final result = controller.session.result!;
-    return Column(
-      children: [
-        ClassificationBanner(
-          classification: result.classification,
-          label: _label(result.classification),
+    return ResultView(
+      classification: result.classification,
+      waz: result.waz,
+      haz: result.haz,
+      whz: result.whz,
+      footer: FilledButton(
+        onPressed: () async {
+          await controller.save();
+          if (!context.mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.measurementSaved)),
+          );
+          Navigator.of(context).pop();
+        },
+        style: FilledButton.styleFrom(
+          minimumSize: const Size.fromHeight(56),
         ),
-        Expanded(
-          child: ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              _zRow(l10n.zScoreWeightForAge, result.waz),
-              _zRow(l10n.zScoreHeightForAge, result.haz),
-              _zRow(l10n.zScoreWeightForHeight, result.whz),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  const Icon(Icons.info_outline, size: 18),
-                  const SizedBox(width: 8),
-                  Expanded(child: Text(l10n.referralAdvised)),
-                ],
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: FilledButton(
-            onPressed: () async {
-              await controller.save();
-              if (!context.mounted) return;
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(l10n.measurementSaved)),
-              );
-              Navigator.of(context).pop();
-            },
-            style: FilledButton.styleFrom(
-              minimumSize: const Size.fromHeight(56),
-            ),
-            child: Text(l10n.saveMeasurement),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _zRow(String label, double? z) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label),
-          Text(
-            z == null ? '—' : z.toStringAsFixed(2), // i18n-ignore: numeric
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-        ],
+        child: Text(l10n.saveMeasurement),
       ),
     );
   }

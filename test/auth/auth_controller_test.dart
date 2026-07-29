@@ -53,6 +53,42 @@ void main() {
       expect(s.role, AppRole.doctor);
       expect(s.method, AuthMethod.google);
     });
+
+    test('email+password creates on first use, then verifies', () async {
+      final api = MockAuthApi();
+      final created = await api.signInWithPassword(
+        'aww@example.com',
+        'secret123',
+        AppRole.aww,
+      );
+      expect(created.method, AuthMethod.password);
+
+      // Correct password signs into the same account.
+      final again = await api.signInWithPassword(
+        'aww@example.com',
+        'secret123',
+        AppRole.aww,
+      );
+      expect(again.userId, created.userId);
+
+      // Wrong password is rejected.
+      expect(
+        () => api.signInWithPassword('aww@example.com', 'nope', AppRole.aww),
+        throwsA(isA<AuthException>()),
+      );
+    });
+
+    test('email+password rejects bad email or short password', () {
+      final api = MockAuthApi();
+      expect(
+        () => api.signInWithPassword('notanemail', 'secret123', AppRole.aww),
+        throwsA(isA<AuthException>()),
+      );
+      expect(
+        () => api.signInWithPassword('a@b.com', '123', AppRole.aww),
+        throwsA(isA<AuthException>()),
+      );
+    });
   });
 
   group('AuthController', () {
@@ -100,14 +136,21 @@ void main() {
       expect(container.read(currentRoleProvider), AppRole.admin);
     });
 
-    test('sign-out clears the session', () async {
+    test('sign-out clears the session and resets unlock + role (security)',
+        () async {
       await container.read(authControllerProvider.future);
       final c = container.read(authControllerProvider.notifier);
       await c.signInWithGoogle(AppRole.doctor);
+      // Simulate the session having been PIN-unlocked.
+      container.read(sessionUnlockedProvider.notifier).state = true;
+
       await c.signOut();
 
       expect(container.read(authControllerProvider).value, isNull);
       expect(store.map.containsKey('auth_session'), isFalse);
+      // A different user must not inherit the unlocked state or the role.
+      expect(container.read(sessionUnlockedProvider), isFalse);
+      expect(container.read(currentRoleProvider), AppRole.aww);
     });
   });
 }

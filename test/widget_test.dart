@@ -55,9 +55,9 @@ void main() {
     expect(find.text('नमस्ते'), findsOneWidget);
     expect(find.text('नया माप लें'), findsOneWidget);
 
-    // Switch to the Result-demo tab and confirm the top of the gallery renders.
-    await tester.tap(find.text('परिणाम नमूना').last);
+    // Switch to the Settings tab and confirm it renders (the language section).
+    await tester.tap(find.text('सेटिंग्स').last);
     await tester.pumpAndSettle();
-    expect(find.text('सामान्य'), findsOneWidget);
+    expect(find.text('भाषा'), findsWidgets);
   });
 }

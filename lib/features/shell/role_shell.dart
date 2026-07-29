@@ -15,8 +15,8 @@ import 'package:cgms_app/features/dashboard/admin_dashboard.dart';
 import 'package:cgms_app/features/dashboard/doctor_dashboard.dart';
 import 'package:cgms_app/features/dashboard/parent_dashboard.dart';
 import 'package:cgms_app/features/dashboard/supervisor_dashboard.dart';
+import 'package:cgms_app/features/centre/centre_screen.dart';
 import 'package:cgms_app/features/home/home_screen.dart';
-import 'package:cgms_app/features/measure/result_demo_screen.dart';
 import 'package:cgms_app/features/roster/roster_screen.dart';
 import 'package:cgms_app/features/settings/settings_screen.dart';
 
@@ -61,10 +61,10 @@ class _RoleShellState extends ConsumerState<RoleShell> {
             label: l10n.navRoster,
           ),
           (
-            page: const ResultDemoScreen(),
-            icon: Icons.assignment_outlined,
-            selectedIcon: Icons.assignment,
-            label: l10n.navResultDemo,
+            page: const CentreScreen(),
+            icon: Icons.home_work_outlined,
+            selectedIcon: Icons.home_work,
+            label: l10n.navCentre,
           ),
           settings,
         ];
@@ -125,7 +125,8 @@ class _RoleShellState extends ConsumerState<RoleShell> {
     final index = _index.clamp(0, dests.length - 1);
 
     return Scaffold(
-      appBar: AppBar(title: Text(dests[index].label)),
+      // No app bar: each top-level screen owns a full-bleed GradientHeader, so a
+      // Material bar on top would be a redundant double header (U8).
       // Lazy: only the selected tab is built, so a screen's data streams open on
       // demand rather than all at once on sign-in.
       body: dests[index].page,
