@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.example.cgms_app"
-    compileSdk = 34
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
