@@ -60,8 +60,9 @@ final referralsProvider =
 });
 
 /// Toggle to switch between Real BLE Hardware (ESP32-S3) and synthetic mock data.
-/// Defaults to true so the app connects to the real ESP32-S3 scale!
-final useRealBleDeviceProvider = StateProvider<bool>((ref) => true);
+/// Defaults to false so headless unit/widget tests and CI pass without hardware.
+/// Set to true to connect to the real ESP32-S3 scale!
+final useRealBleDeviceProvider = StateProvider<bool>((ref) => false);
 
 /// The measuring device. Returns RealDeviceClient when useRealBleDeviceProvider
 /// is true, or MockDeviceClient when false.
