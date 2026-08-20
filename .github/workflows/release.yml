@@ -1,0 +1,166 @@
+name: Build & Release App
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Release Tag (e.g. v0.1.0-beta)'
+        required: false
+        default: 'v0.1.0-dev'
+      release_name:
+        description: 'Release Name'
+        required: false
+        default: 'Ankur CGMS Development Build'
+
+permissions:
+  contents: write
+
+jobs:
+  # ==========================================================================
+  # 1. BUILD ANDROID (APK & AAB)
+  # ==========================================================================
+  build-android:
+    name: Build Android (APK & AAB)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up Java Development Kit (JDK 17)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Generate Localizations & Database Code
+        run: |
+          flutter gen-l10n
+          dart run build_runner build --delete-conflicting-outputs
+
+      - name: Build Android Release APK
+        run: flutter build apk --release
+
+      - name: Build Android App Bundle (AAB)
+        run: flutter build appbundle --release
+
+      - name: Prepare Android Output Artifacts
+        run: |
+          mkdir -p output/android
+          cp build/app/outputs/flutter-apk/app-release.apk output/android/Ankur-CGMS-android-release.apk
+          cp build/app/outputs/bundle/release/app-release.aab output/android/Ankur-CGMS-android-release.aab
+
+      - name: Upload Android Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-builds
+          path: output/android/
+          retention-days: 7
+
+  # ==========================================================================
+  # 2. BUILD IOS (IPA & Runner.app)
+  # ==========================================================================
+  build-ios:
+    name: Build iOS (IPA & Runner.app)
+    runs-on: macos-14
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Generate Localizations & Database Code
+        run: |
+          flutter gen-l10n
+          dart run build_runner build --delete-conflicting-outputs
+
+      - name: Build iOS (No Codesign for Development/Ad-Hoc)
+        run: flutter build ios --release --no-codesign
+
+      - name: Package iOS IPA & Runner.app
+        run: |
+          mkdir -p output/ios/Payload
+          cp -r build/ios/iphoneos/Runner.app output/ios/Payload/
+          cd output/ios
+          zip -r Ankur-CGMS-ios-development.ipa Payload
+          rm -rf Payload
+          cd ../..
+          cd build/ios/iphoneos
+          zip -r ../../../output/ios/Ankur-CGMS-ios-Runner.app.zip Runner.app
+          cd ../../..
+
+      - name: Upload iOS Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-builds
+          path: output/ios/
+          retention-days: 7
+
+  # ==========================================================================
+  # 3. PUBLISH GITHUB RELEASE
+  # ==========================================================================
+  publish-release:
+    name: Publish to GitHub Releases
+    needs: [build-android, build-ios]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Download Android Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: android-builds
+          path: release_assets/
+
+      - name: Download iOS Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ios-builds
+          path: release_assets/
+
+      - name: Determine Release Tag & Title
+        id: release_info
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "tag=${{ github.event.inputs.release_tag }}" >> $GITHUB_OUTPUT
+            echo "title=${{ github.event.inputs.release_name }}" >> $GITHUB_OUTPUT
+          else
+            TAG_NAME="${GITHUB_REF#refs/tags/}"
+            echo "tag=$TAG_NAME" >> $GITHUB_OUTPUT
+            echo "title=Ankur CGMS Release $TAG_NAME" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create GitHub Release and Upload Binaries
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.release_info.outputs.tag }}
+          name: ${{ steps.release_info.outputs.title }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          files: |
+            release_assets/Ankur-CGMS-android-release.apk
+            release_assets/Ankur-CGMS-android-release.aab
+            release_assets/Ankur-CGMS-ios-development.ipa
+            release_assets/Ankur-CGMS-ios-Runner.app.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
