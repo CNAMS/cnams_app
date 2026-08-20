@@ -25,7 +25,9 @@ class AuthController extends AsyncNotifier<AuthSession?> {
     final raw = await ref.read(secureStoreProvider).read(_sessionKey);
     final session = raw == null ? null : AuthSession.decode(raw);
     if (session != null) {
-      ref.read(currentRoleProvider.notifier).state = session.role;
+      Future.microtask(
+        () => ref.read(currentRoleProvider.notifier).state = session.role,
+      );
     }
     return session;
   }

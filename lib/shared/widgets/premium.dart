@@ -130,15 +130,20 @@ class _PremiumCardState extends State<PremiumCard> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final content = Container(
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: AppRadius.allLg,
-        boxShadow: AppShadows.soft(theme.brightness),
-      ),
-      child: Padding(padding: widget.padding, child: widget.child),
-    );
-    if (widget.onTap == null) return content;
+    if (widget.onTap == null) {
+      return Container(
+        decoration: BoxDecoration(
+          borderRadius: AppRadius.allLg,
+          boxShadow: AppShadows.soft(theme.brightness),
+        ),
+        child: Material(
+          color: theme.colorScheme.surface,
+          borderRadius: AppRadius.allLg,
+          clipBehavior: Clip.antiAlias,
+          child: Padding(padding: widget.padding, child: widget.child),
+        ),
+      );
+    }
 
     final reduceMotion =
         MediaQuery.maybeOf(context)?.disableAnimations ?? false;
@@ -150,13 +155,20 @@ class _PremiumCardState extends State<PremiumCard> {
         scale: (_pressed && !reduceMotion) ? 0.97 : 1,
         duration: const Duration(milliseconds: 110),
         curve: Curves.easeOut,
-        child: Material(
-          color: Colors.transparent,
-          borderRadius: AppRadius.allLg,
-          child: InkWell(
+        child: Container(
+          decoration: BoxDecoration(
             borderRadius: AppRadius.allLg,
-            onTap: widget.onTap,
-            child: content,
+            boxShadow: AppShadows.soft(theme.brightness),
+          ),
+          child: Material(
+            color: theme.colorScheme.surface,
+            borderRadius: AppRadius.allLg,
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              borderRadius: AppRadius.allLg,
+              onTap: widget.onTap,
+              child: Padding(padding: widget.padding, child: widget.child),
+            ),
           ),
         ),
       ),
