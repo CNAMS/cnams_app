@@ -38,7 +38,7 @@ dependencies:
   connectivity_plus: ^6.0.0
 
   # Parent card printing / sharing
-  printing: ^5.14.0
+  printing: ^5.13.1
   pdf: ^3.10.0
   share_plus: ^9.0.0
 
