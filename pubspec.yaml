@@ -16,7 +16,6 @@ dependencies:
 
   # State management
   flutter_riverpod: ^2.5.0
-  riverpod_annotation: ^2.3.0
 
   # Local database. Only sqlcipher_flutter_libs is included: it ships the native
   # SQLite build (with SQLCipher for the P4 encryption work) and REPLACES
@@ -64,7 +63,6 @@ dev_dependencies:
   flutter_lints: ^4.0.0
   build_runner: ^2.4.0
   drift_dev: ^2.16.0
-  riverpod_generator: ^2.4.0
 
 flutter:
   uses-material-design: true
