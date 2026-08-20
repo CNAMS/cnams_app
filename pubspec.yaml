@@ -34,7 +34,7 @@ dependencies:
   fl_chart: ^0.68.0
 
   # Background sync
-  workmanager: ^0.5.2
+  workmanager: ^0.9.0
   connectivity_plus: ^6.0.0
 
   # Parent card printing / sharing
