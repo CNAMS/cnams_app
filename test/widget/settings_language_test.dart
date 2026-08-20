@@ -6,15 +6,27 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:cgms_app/core/auth/secure_store.dart';
 import 'package:cgms_app/core/l10n/generated/app_localizations.dart';
 import 'package:cgms_app/core/providers.dart';
 import 'package:cgms_app/core/settings/locale_controller.dart';
 import 'package:cgms_app/features/settings/settings_screen.dart';
 
+class _FakeStore implements SecureStore {
+  final Map<String, String> map = {};
+  @override
+  Future<String?> read(String key) async => map[key];
+  @override
+  Future<void> write(String key, String value) async => map[key] = value;
+  @override
+  Future<void> delete(String key) async => map.remove(key);
+}
+
 Widget _wrap(SharedPreferences prefs) {
   return ProviderScope(
     overrides: [
       sharedPreferencesProvider.overrideWithValue(prefs),
+      secureStoreProvider.overrideWithValue(_FakeStore()),
       // Keep the Data & security section off the platform (secure storage / DB).
       pinIsSetProvider.overrideWith((ref) => false),
       outboxCountsProvider.overrideWith(
@@ -44,7 +56,7 @@ void main() {
     final prefs = await SharedPreferences.getInstance();
 
     await tester.pumpWidget(_wrap(prefs));
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     // Starts in Hindi.
     expect(find.text('भाषा'), findsOneWidget); // "Language" header in Hindi

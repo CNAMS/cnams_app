@@ -45,6 +45,10 @@ void main() {
           sharedPreferencesProvider.overrideWithValue(prefs),
           secureStoreProvider.overrideWithValue(store),
           splashShownProvider.overrideWith((ref) => true),
+          pinIsSetProvider.overrideWith((ref) => false),
+          outboxCountsProvider.overrideWith(
+            (ref) async => (pending: 0, deadLetter: 0),
+          ),
         ],
         child: const CgmsApp(),
       ),
