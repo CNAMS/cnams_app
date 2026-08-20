@@ -57,7 +57,7 @@ Future<Uint8List> buildParentCardPdf(
         crossAxisAlignment: pw.CrossAxisAlignment.stretch,
         children: [
           pw.Text(data.title, style: const pw.TextStyle(fontSize: 16)),
-          const pw.SizedBox(height: 4),
+          pw.SizedBox(height: 4),
           pw.Text(
             data.childName,
             style: const pw.TextStyle(
@@ -66,7 +66,7 @@ Future<Uint8List> buildParentCardPdf(
             ),
           ),
           pw.Text(data.ageLabel),
-          const pw.SizedBox(height: 16),
+          pw.SizedBox(height: 16),
           // Colour band + result word — the top-of-card signal.
           pw.Container(
             width: double.infinity,
@@ -81,7 +81,7 @@ Future<Uint8List> buildParentCardPdf(
               ),
             ),
           ),
-          const pw.SizedBox(height: 16),
+          pw.SizedBox(height: 16),
           for (final (label, value) in data.rows)
             pw.Padding(
               padding: const pw.EdgeInsets.symmetric(vertical: 3),
@@ -90,7 +90,7 @@ Future<Uint8List> buildParentCardPdf(
                 children: [pw.Text(label), pw.Text(value)],
               ),
             ),
-          const pw.SizedBox(height: 16),
+          pw.SizedBox(height: 16),
           pw.Text(data.referralLine),
         ],
       ),
