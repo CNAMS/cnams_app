@@ -27,7 +27,7 @@ class TestEntry {
 
 Future<void> main(List<String> args) async {
   final stopwatch = Stopwatch()..start();
-  stdout.writeln('🚀 Running Flutter test suite with JSON reporter...');
+  stdout.writeln('Running Flutter test suite with JSON reporter...');
 
   final process = await Process.start(
     'flutter',
@@ -68,7 +68,11 @@ Future<void> main(List<String> args) async {
             final name = t['name'] as String? ?? 'Unnamed test';
             final suiteId = t['suiteID'] as int?;
             final path = suiteId != null ? suites[suiteId] : null;
-            final entry = TestEntry(id: id, name: name, suitePath: path);
+            final entry = TestEntry(
+              id: id,
+              name: name,
+              suitePath: path,
+            );
             tests[id] = entry;
           }
           break;
@@ -92,7 +96,8 @@ Future<void> main(List<String> args) async {
             final msg = json['message'] as String? ?? '';
             tests[testId]!.messages.add(msg);
             if (msg.startsWith('Skip:')) {
-              tests[testId]!.skipReason = msg.replaceFirst('Skip:', '').trim();
+              tests[testId]!.skipReason =
+                  msg.replaceFirst('Skip:', '').trim();
             }
           }
           break;
@@ -111,19 +116,20 @@ Future<void> main(List<String> args) async {
             entry.isSkipped = isSkip;
 
             // Ignore internal loading tests (like "loading test/...")
-            if (entry.name.startsWith('loading ') && entry.suitePath != null) {
+            if (entry.name.startsWith('loading ') &&
+                entry.suitePath != null) {
               continue;
             }
 
             if (isSkip) {
               skipped.add(entry);
-              stdout.writeln('  ⏭️  [SKIPPED] ${entry.name}');
+              stdout.writeln('  [SKIPPED] ${entry.name}');
             } else if (res == 'success' && entry.errors.isEmpty) {
               passed.add(entry);
-              stdout.writeln('  ✅ [PASSED] ${entry.name}');
+              stdout.writeln('  [PASSED] ${entry.name}');
             } else {
               failed.add(entry);
-              stdout.writeln('  ❌ [FAILED] ${entry.name}');
+              stdout.writeln('  [FAILED] ${entry.name}');
             }
           }
           break;
@@ -140,40 +146,43 @@ Future<void> main(List<String> args) async {
   stopwatch.stop();
 
   final totalCount = passed.length + failed.length + skipped.length;
-  final durationSec = (stopwatch.elapsedMilliseconds / 1000).toStringAsFixed(1);
+  final durationSec =
+      (stopwatch.elapsedMilliseconds / 1000).toStringAsFixed(1);
 
   // Build GitHub Markdown Summary
   final buf = StringBuffer();
-  buf.writeln('## 🧪 Flutter Test Suite Report\n');
+  buf.writeln('## Flutter Test Suite Report\n');
   buf.writeln(
     failed.isEmpty
-        ? '### 🟢 All tests completed successfully in ${durationSec}s!'
-        : '### 🔴 ${failed.length} test(s) failed in ${durationSec}s',
+        ? '### All tests completed successfully in ${durationSec}s!'
+        : '### ${failed.length} test(s) failed in ${durationSec}s',
   );
   buf.writeln();
 
   buf.writeln('| Metric | Count | Status |');
   buf.writeln('|:-------|:-----:|:------:|');
-  buf.writeln('| **Total Tests** | `$totalCount` | 📋 |');
-  buf.writeln('| **Passed** | `${passed.length}` | ✅ |');
-  buf.writeln('| **Failed** | `${failed.length}` | ${failed.isEmpty ? '—' : '❌'} |');
-  buf.writeln('| **Skipped** | `${skipped.length}` | ${skipped.isEmpty ? '—' : '⏭️'} |');
+  buf.writeln('| **Total Tests** | `$totalCount` | Total |');
+  buf.writeln('| **Passed** | `${passed.length}` | Passed |');
+  final failStatus = failed.isEmpty ? '-' : 'Failed';
+  buf.writeln('| **Failed** | `${failed.length}` | $failStatus |');
+  final skipStatus = skipped.isEmpty ? '-' : 'Skipped';
+  buf.writeln('| **Skipped** | `${skipped.length}` | $skipStatus |');
   buf.writeln();
 
   // Failed tests section with collapsible error stack traces
   if (failed.isNotEmpty) {
-    buf.writeln('### ❌ Failed Tests (${failed.length})\n');
+    buf.writeln('### Failed Tests (${failed.length})\n');
     for (final f in failed) {
       final location = f.suitePath != null ? '`(${f.suitePath})`' : '';
-      buf.writeln('#### ❌ ${f.name} $location\n');
+      buf.writeln('#### ${f.name} $location\n');
       if (f.errors.isNotEmpty) {
-        buf.writeln('<details><summary>🔍 View Error & Stack Trace</summary>\n');
+        buf.writeln('<details><summary>View Error & Stack Trace</summary>\n');
         buf.writeln('```');
         buf.writeln(f.errors.join('\n\n'));
         buf.writeln('```\n');
         buf.writeln('</details>\n');
       } else if (f.messages.isNotEmpty) {
-        buf.writeln('<details><summary>📜 Output Logs</summary>\n');
+        buf.writeln('<details><summary>Output Logs</summary>\n');
         buf.writeln('```');
         buf.writeln(f.messages.join('\n'));
         buf.writeln('```\n');
@@ -184,12 +193,13 @@ Future<void> main(List<String> args) async {
 
   // Skipped tests section
   if (skipped.isNotEmpty) {
-    buf.writeln('### ⏭️ Skipped Tests (${skipped.length})\n');
+    buf.writeln('### Skipped Tests (${skipped.length})\n');
     buf.writeln('| Test Name | Suite | Reason / Note |');
     buf.writeln('|:----------|:------|:--------------|');
     for (final s in skipped) {
-      final file = s.suitePath != null ? '`${s.suitePath}`' : '—';
-      final reason = s.skipReason ?? (s.messages.isNotEmpty ? s.messages.first : 'Skipped');
+      final file = s.suitePath != null ? '`${s.suitePath}`' : '-';
+      final reason = s.skipReason ??
+          (s.messages.isNotEmpty ? s.messages.first : 'Skipped');
       buf.writeln('| **${s.name}** | $file | $reason |');
     }
     buf.writeln();
@@ -197,8 +207,10 @@ Future<void> main(List<String> args) async {
 
   // Passed tests collapsible list
   if (passed.isNotEmpty) {
-    buf.writeln('### ✅ Passed Tests (${passed.length})\n');
-    buf.writeln('<details><summary>Click to expand all passed tests</summary>\n');
+    buf.writeln('### Passed Tests (${passed.length})\n');
+    buf.writeln(
+      '<details><summary>Click to expand all passed tests</summary>\n',
+    );
     for (final p in passed) {
       final file = p.suitePath != null ? '`(${p.suitePath})`' : '';
       buf.writeln('- [x] **${p.name}** $file');
@@ -211,21 +223,21 @@ Future<void> main(List<String> args) async {
   // Save report to file for workflow steps or PR comments
   final reportFile = File('test_summary.md');
   await reportFile.writeAsString(report);
-  stdout.writeln('\n📄 Saved test report to test_summary.md');
+  stdout.writeln('\nSaved test report to test_summary.md');
 
   // Write to GitHub Actions step summary if running in CI
   final githubSummaryPath = Platform.environment['GITHUB_STEP_SUMMARY'];
   if (githubSummaryPath != null && githubSummaryPath.isNotEmpty) {
     final summaryFile = File(githubSummaryPath);
     await summaryFile.writeAsString(report, mode: FileMode.append);
-    stdout.writeln('📊 Appended test report to GITHUB_STEP_SUMMARY');
+    stdout.writeln('Appended test report to GITHUB_STEP_SUMMARY');
   }
 
   if (failed.isNotEmpty || exitCode != 0) {
-    stderr.writeln('\n💥 Tests failed! Exiting with code 1.');
+    stderr.writeln('\nTests failed! Exiting with code 1.');
     exit(1);
   } else {
-    stdout.writeln('\n🎉 All tests passed cleanly!');
+    stdout.writeln('\nAll tests passed cleanly!');
     exit(0);
   }
 }
