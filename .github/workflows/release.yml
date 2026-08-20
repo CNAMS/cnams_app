@@ -20,10 +20,10 @@ permissions:
 
 jobs:
   # ==========================================================================
-  # 1. BUILD ANDROID (APK & AAB)
+  # 1. BUILD ANDROID (ALL ARCHITECTURES: UNIVERSAL, ARM64, ARM32, X86_64 & AAB)
   # ==========================================================================
   build-android:
-    name: Build Android (APK & AAB)
+    name: Build Android (All Architectures)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Source Code
@@ -49,17 +49,26 @@ jobs:
           flutter gen-l10n
           dart run build_runner build --delete-conflicting-outputs
 
-      - name: Build Android Release APK
+      - name: Build Universal Android APK (All CPU architectures in one file)
         run: flutter build apk --release
 
-      - name: Build Android App Bundle (AAB)
+      - name: Build Split-per-ABI Android APKs (Optimized sizes for arm64, armv7, x86_64)
+        run: flutter build apk --release --split-per-abi
+
+      - name: Build Android App Bundle (AAB for Google Play)
         run: flutter build appbundle --release
 
-      - name: Prepare Android Output Artifacts
+      - name: Prepare & Organize Android Output Artifacts
         run: |
           mkdir -p output/android
-          cp build/app/outputs/flutter-apk/app-release.apk output/android/Ankur-CGMS-android-release.apk
-          cp build/app/outputs/bundle/release/app-release.aab output/android/Ankur-CGMS-android-release.aab
+          # Copy Universal APK
+          cp build/app/outputs/flutter-apk/app-release.apk output/android/Ankur-CGMS-android-universal.apk
+          # Copy Per-Architecture APKs
+          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk output/android/Ankur-CGMS-android-arm64-v8a.apk
+          cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk output/android/Ankur-CGMS-android-armeabi-v7a.apk
+          cp build/app/outputs/flutter-apk/app-x86_64-release.apk output/android/Ankur-CGMS-android-x86_64.apk
+          # Copy Google Play App Bundle
+          cp build/app/outputs/bundle/release/app-release.aab output/android/Ankur-CGMS-android-appbundle.aab
 
       - name: Upload Android Artifacts
         uses: actions/upload-artifact@v4
@@ -158,8 +167,11 @@ jobs:
           prerelease: false
           generate_release_notes: true
           files: |
-            release_assets/Ankur-CGMS-android-release.apk
-            release_assets/Ankur-CGMS-android-release.aab
+            release_assets/Ankur-CGMS-android-universal.apk
+            release_assets/Ankur-CGMS-android-arm64-v8a.apk
+            release_assets/Ankur-CGMS-android-armeabi-v7a.apk
+            release_assets/Ankur-CGMS-android-x86_64.apk
+            release_assets/Ankur-CGMS-android-appbundle.aab
             release_assets/Ankur-CGMS-ios-development.ipa
             release_assets/Ankur-CGMS-ios-Runner.app.zip
         env:
