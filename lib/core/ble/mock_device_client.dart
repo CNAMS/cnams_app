@@ -54,6 +54,14 @@ class MockDeviceClient implements DeviceClient {
   @override
   Future<void> disconnect() async => _connected = false;
 
+  /// No-op: the mock auto-runs its jitter cycle when readings() is subscribed.
+  @override
+  Future<void> triggerMeasurement() async {}
+
+  /// No-op: the mock has no tare state.
+  @override
+  Future<void> tare() async {}
+
   @override
   Stream<DeviceReading> readings(DeviceChannel channel) async* {
     if (!_connected) {

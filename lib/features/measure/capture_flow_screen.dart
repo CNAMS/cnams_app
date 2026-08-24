@@ -163,8 +163,8 @@ class _Connecting extends StatelessWidget {
   }
 }
 
-/// A live device reading step: shows the streamed value and a stability
-/// indicator, and enables Confirm only once the reading is stable.
+/// A live device reading step: shows the streamed value with a stability
+/// indicator, Take Measurement / Zero buttons, and auto-confirm when stable.
 class _DeviceCaptureStep extends StatefulWidget {
   const _DeviceCaptureStep({
     required this.device,
@@ -194,13 +194,35 @@ class _DeviceCaptureStep extends StatefulWidget {
 class _DeviceCaptureStepState extends State<_DeviceCaptureStep> {
   StreamSubscription<DeviceReading>? _sub;
   DeviceReading? _reading;
+  DeviceReading? _lockedReading; // non-zero stable reading, protected from zero-glitch
+  bool _autoConfirm = true;      // auto-advance when stable
+  bool _triggering = false;
+  bool _taring = false;
 
   @override
   void initState() {
     super.initState();
-    _sub = widget.device
-        .readings(widget.channel)
-        .listen((r) => setState(() => _reading = r));
+    _sub = widget.device.readings(widget.channel).listen(_onReading);
+  }
+
+  void _onReading(DeviceReading r) {
+    setState(() {
+      _reading = r;
+
+      // Guard: once we have a non-zero stable lock, don't overwrite with
+      // a subsequent zero-stable packet (firmware ADC glitch protection).
+      if (r.stable && r.valueRaw > 0) {
+        _lockedReading = r;
+      } else if (!r.stable) {
+        // New measurement cycle started — clear the old lock
+        _lockedReading = null;
+      }
+    });
+
+    // Auto-confirm: if stable and non-zero and toggle is on, advance
+    if (_autoConfirm && r.stable && r.valueRaw > 0) {
+      widget.onConfirm(r.valueRaw);
+    }
   }
 
   @override
@@ -209,58 +231,157 @@ class _DeviceCaptureStepState extends State<_DeviceCaptureStep> {
     super.dispose();
   }
 
+  Future<void> _triggerMeasurement() async {
+    setState(() => _triggering = true);
+    await widget.device.triggerMeasurement();
+    if (mounted) setState(() => _triggering = false);
+  }
+
+  Future<void> _tare() async {
+    setState(() => _taring = true);
+    await widget.device.tare();
+    if (mounted) setState(() => _taring = false);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final reading = _reading;
-    final stable = reading?.stable ?? false;
-    final display = reading == null
+    final theme = Theme.of(context);
+
+    // Prefer locked (protected) reading for display; fall back to live reading
+    final displayReading = _lockedReading ?? _reading;
+    final stable = displayReading?.stable ?? false;
+    final hasValue = (displayReading?.valueRaw ?? 0) > 0;
+
+    final display = displayReading == null
         ? '—'
-        : (reading.valueRaw / widget.divisor).toStringAsFixed(
-            widget.fractionDigits,
-          );
+        : (displayReading.valueRaw / widget.divisor)
+            .toStringAsFixed(widget.fractionDigits);
+
+    final Color statusColor = stable && hasValue
+        ? const Color(0xFF2E7D32)   // green — locked
+        : stable
+            ? const Color(0xFFF57F17) // amber — stable but zero
+            : theme.colorScheme.onSurfaceVariant;
 
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(widget.title, style: Theme.of(context).textTheme.titleLarge),
+          Text(widget.title, style: theme.textTheme.titleLarge),
           if (widget.header != null) ...[
             const SizedBox(height: 16),
             widget.header!,
           ],
+
           const Spacer(),
+
+          // ── Live value display ──────────────────────────────────────────
           Center(
             child: Text(
               '$display ${widget.unit}', // i18n-ignore: numeric value + unit
-              style: const TextStyle(fontSize: 56, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 56,
+                fontWeight: FontWeight.bold,
+                color: stable && hasValue ? const Color(0xFF2E7D32) : null,
+              ),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
+
+          // ── Stability badge ─────────────────────────────────────────────
           Center(
             child: Chip(
               avatar: Icon(
-                stable ? Icons.check_circle : Icons.sync,
-                color: stable ? const Color(0xFF2E7D32) : null,
+                stable && hasValue
+                    ? Icons.lock
+                    : stable
+                        ? Icons.sync_problem
+                        : Icons.sync,
+                size: 18,
+                color: statusColor,
               ),
-              label: Text(stable ? l10n.stabilityStable : l10n.stabilityHold),
+              label: Text(
+                stable && hasValue
+                    ? l10n.stabilityStable   // "Stable" / locked
+                    : l10n.stabilityHold,    // "Hold steady"
+                style: TextStyle(color: statusColor),
+              ),
+              side: BorderSide(color: statusColor.withOpacity(0.4)),
             ),
           ),
+
           const Spacer(),
-          FilledButton(
-            onPressed:
-                stable ? () => widget.onConfirm(reading!.valueRaw) : null,
+
+          // ── Auto-confirm toggle ─────────────────────────────────────────
+          SwitchListTile(
+            value: _autoConfirm,
+            onChanged: (v) => setState(() => _autoConfirm = v),
+            title: const Text('Auto-fill on stable lock'),
+            subtitle: const Text('Advances automatically when reading locks'),
+            contentPadding: EdgeInsets.zero,
+          ),
+          const SizedBox(height: 12),
+
+          // ── Take Measurement + Zero buttons ─────────────────────────────
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _taring ? null : _tare,
+                  icon: _taring
+                      ? const SizedBox(
+                          width: 16, height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.exposure_zero),
+                  label: const Text('Zero'),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(0, 48),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                flex: 2,
+                child: FilledButton.tonalIcon(
+                  onPressed: _triggering ? null : _triggerMeasurement,
+                  icon: _triggering
+                      ? const SizedBox(
+                          width: 16, height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.play_arrow),
+                  label: const Text('Take Measurement'),
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size(0, 48),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // ── Use this value / Confirm ────────────────────────────────────
+          FilledButton.icon(
+            onPressed: hasValue
+                ? () => widget.onConfirm(displayReading!.valueRaw)
+                : null,
+            icon: const Icon(Icons.check),
+            label: Text(hasValue
+                ? 'Use ${display} ${widget.unit}'   // i18n-ignore: composed
+                : l10n.confirm),
             style: FilledButton.styleFrom(
               minimumSize: const Size.fromHeight(56),
             ),
-            child: Text(l10n.confirm),
           ),
         ],
       ),
     );
   }
 }
+
 
 class _PositionPicker extends StatelessWidget {
   const _PositionPicker({
