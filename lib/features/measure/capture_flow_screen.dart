@@ -196,7 +196,7 @@ class _DeviceCaptureStepState extends State<_DeviceCaptureStep> {
   DeviceReading? _reading;
   DeviceReading?
       _lockedReading; // non-zero stable reading, protected from zero-glitch
-  bool _autoConfirm = true; // auto-advance when stable
+  bool _autoFill = true; // auto-fill input field when stable
   bool _triggering = false;
   bool _taring = false;
 
@@ -223,9 +223,9 @@ class _DeviceCaptureStepState extends State<_DeviceCaptureStep> {
       if (r.stable && r.valueRaw > 0) {
         _lockedReading = r;
 
-        // Auto-fill the text field with the locked value — but only if the
-        // user isn't currently editing it manually.
-        if (!_manualEditing) {
+        // Auto-fill the text field with the locked value — but only if
+        // auto-fill is enabled and the user isn't currently typing manually.
+        if (_autoFill && !_manualEditing) {
           _manualController.text = (r.valueRaw / widget.divisor)
               .toStringAsFixed(widget.fractionDigits);
         }
@@ -234,11 +234,6 @@ class _DeviceCaptureStepState extends State<_DeviceCaptureStep> {
         _lockedReading = null;
       }
     });
-
-    // Auto-confirm: stable + non-zero + toggle on + user not manually editing
-    if (_autoConfirm && r.stable && r.valueRaw > 0 && !_manualEditing) {
-      widget.onConfirm(r.valueRaw);
-    }
   }
 
   @override
@@ -363,10 +358,10 @@ class _DeviceCaptureStepState extends State<_DeviceCaptureStep> {
           ),
           const SizedBox(height: 12),
 
-          // ── Auto-confirm toggle ──────────────────────────────────────────
+          // ── Auto-fill toggle ─────────────────────────────────────────────
           SwitchListTile(
-            value: _autoConfirm,
-            onChanged: (v) => setState(() => _autoConfirm = v),
+            value: _autoFill,
+            onChanged: (v) => setState(() => _autoFill = v),
             title: Text(l10n.autoFillOnLock),
             subtitle: Text(l10n.autoFillOnLockHelp),
             contentPadding: EdgeInsets.zero,
