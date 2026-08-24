@@ -20,6 +20,7 @@ import 'package:cgms_app/core/l10n/generated/app_localizations.dart';
 import 'package:cgms_app/core/providers.dart';
 import 'package:cgms_app/core/settings/locale_controller.dart';
 import 'package:cgms_app/features/auth/role_display.dart';
+import 'package:cgms_app/features/device/device_manager_screen.dart';
 import 'package:cgms_app/features/export/csv_export.dart';
 import 'package:cgms_app/features/settings/about_screen.dart';
 import 'package:cgms_app/shared/theme/design_tokens.dart';
@@ -170,53 +171,69 @@ class SettingsScreen extends ConsumerWidget {
                 SectionTitle(title: l10n.settingsBleScale),
                 PremiumCard(
                   padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
-                  child: Consumer(
-                    builder: (context, ref, _) {
-                      final pairedScale = ref.watch(scalePairingProvider);
-                      final isPaired = pairedScale.isPaired;
+                  child: Column(
+                    children: [
+                      Consumer(
+                        builder: (context, ref, _) {
+                          final pairedScale = ref.watch(scalePairingProvider);
+                          final isPaired = pairedScale.isPaired;
 
-                      return ListTile(
-                        leading: Icon(
-                          isPaired
-                              ? Icons.bluetooth_connected
-                              : Icons.bluetooth_searching,
-                          color: isPaired
-                              ? const Color(0xFF2E7D32)
-                              : Theme.of(context).colorScheme.primary,
-                        ),
-                        title: Text(
-                          isPaired
-                              ? l10n.bleScalePaired(
-                                  pairedScale.name ?? pairedScale.id!)
-                              : l10n.bleScaleNotPaired,
-                          style: TextStyle(
-                            fontWeight:
-                                isPaired ? FontWeight.bold : FontWeight.normal,
+                          return ListTile(
+                            leading: Icon(
+                              isPaired
+                                  ? Icons.bluetooth_connected
+                                  : Icons.bluetooth_searching,
+                              color: isPaired
+                                  ? const Color(0xFF2E7D32)
+                                  : Theme.of(context).colorScheme.primary,
+                            ),
+                            title: Text(
+                              isPaired
+                                  ? l10n.bleScalePaired(
+                                      pairedScale.name ?? pairedScale.id!)
+                                  : l10n.bleScaleNotPaired,
+                              style: TextStyle(
+                                fontWeight:
+                                    isPaired ? FontWeight.bold : FontWeight.normal,
+                              ),
+                            ),
+                            subtitle: Text(
+                              isPaired
+                                  ? (pairedScale.id ?? '')
+                                  : l10n.settingsBleScaleSubtitle,
+                            ),
+                            trailing: isPaired
+                                ? TextButton.icon(
+                                    icon: const Icon(Icons.link_off, size: 16),
+                                    label: Text(l10n.bleScaleUnpairAction),
+                                    onPressed: () => ref
+                                        .read(scalePairingProvider.notifier)
+                                        .unpair(),
+                                  )
+                                : FilledButton.tonalIcon(
+                                    icon: const Icon(Icons.search, size: 16),
+                                    label: Text(l10n.bleScalePairAction),
+                                    onPressed: () => showDialog<void>(
+                                      context: context,
+                                      builder: (_) => const _ScalePairingDialog(),
+                                    ),
+                                  ),
+                          );
+                        },
+                      ),
+                      const Divider(height: 1),
+                      ListTile(
+                        leading: const Icon(Icons.tune),
+                        title: Text(l10n.deviceManagerSettingsTitle),
+                        subtitle: Text(l10n.deviceManagerSettingsSubtitle),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => const DeviceManagerScreen(),
                           ),
                         ),
-                        subtitle: Text(
-                          isPaired
-                              ? (pairedScale.id ?? '')
-                              : l10n.settingsBleScaleSubtitle,
-                        ),
-                        trailing: isPaired
-                            ? TextButton.icon(
-                                icon: const Icon(Icons.link_off, size: 16),
-                                label: Text(l10n.bleScaleUnpairAction),
-                                onPressed: () => ref
-                                    .read(scalePairingProvider.notifier)
-                                    .unpair(),
-                              )
-                            : FilledButton.tonalIcon(
-                                icon: const Icon(Icons.search, size: 16),
-                                label: Text(l10n.bleScalePairAction),
-                                onPressed: () => showDialog<void>(
-                                  context: context,
-                                  builder: (_) => const _ScalePairingDialog(),
-                                ),
-                              ),
-                      );
-                    },
+                      ),
+                    ],
                   ),
                 ),
                 SectionTitle(title: l10n.settingsAbout),
