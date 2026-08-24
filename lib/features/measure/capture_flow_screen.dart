@@ -163,8 +163,8 @@ class _Connecting extends StatelessWidget {
   }
 }
 
-/// A live device reading step: shows the streamed value and a stability
-/// indicator, and enables Confirm only once the reading is stable.
+/// A live device reading step: shows the streamed value with a stability
+/// indicator, Take Measurement / Zero buttons, and auto-confirm when stable.
 class _DeviceCaptureStep extends StatefulWidget {
   const _DeviceCaptureStep({
     required this.device,
@@ -194,67 +194,238 @@ class _DeviceCaptureStep extends StatefulWidget {
 class _DeviceCaptureStepState extends State<_DeviceCaptureStep> {
   StreamSubscription<DeviceReading>? _sub;
   DeviceReading? _reading;
+  DeviceReading?
+      _lockedReading; // non-zero stable reading, protected from zero-glitch
+  bool _autoConfirm = true; // auto-advance when stable
+  bool _triggering = false;
+  bool _taring = false;
+
+  // ── Manual entry ────────────────────────────────────────────────────────────
+  final _manualController = TextEditingController();
+  final _manualFocus = FocusNode();
+  bool _manualEditing = false; // true while user has focus on the text field
 
   @override
   void initState() {
     super.initState();
-    _sub = widget.device
-        .readings(widget.channel)
-        .listen((r) => setState(() => _reading = r));
+    _sub = widget.device.readings(widget.channel).listen(_onReading);
+    _manualFocus.addListener(() {
+      setState(() => _manualEditing = _manualFocus.hasFocus);
+    });
+  }
+
+  void _onReading(DeviceReading r) {
+    setState(() {
+      _reading = r;
+
+      // Guard: once we have a non-zero stable lock, don't overwrite with
+      // a subsequent zero-stable packet (firmware ADC glitch protection).
+      if (r.stable && r.valueRaw > 0) {
+        _lockedReading = r;
+
+        // Auto-fill the text field with the locked value — but only if the
+        // user isn't currently editing it manually.
+        if (!_manualEditing) {
+          _manualController.text = (r.valueRaw / widget.divisor)
+              .toStringAsFixed(widget.fractionDigits);
+        }
+      } else if (!r.stable) {
+        // New measurement cycle started — clear the old lock
+        _lockedReading = null;
+      }
+    });
+
+    // Auto-confirm: stable + non-zero + toggle on + user not manually editing
+    if (_autoConfirm && r.stable && r.valueRaw > 0 && !_manualEditing) {
+      widget.onConfirm(r.valueRaw);
+    }
   }
 
   @override
   void dispose() {
     _sub?.cancel();
+    _manualController.dispose();
+    _manualFocus.dispose();
     super.dispose();
+  }
+
+  Future<void> _triggerMeasurement() async {
+    setState(() => _triggering = true);
+    await widget.device.triggerMeasurement();
+    if (mounted) setState(() => _triggering = false);
+  }
+
+  Future<void> _tare() async {
+    setState(() => _taring = true);
+    await widget.device.tare();
+    if (mounted) setState(() => _taring = false);
+  }
+
+  /// Parses the manual text field back to raw integer units.
+  int? get _manualRaw {
+    final v = double.tryParse(_manualController.text.trim());
+    return v == null ? null : (v * widget.divisor).round();
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final reading = _reading;
-    final stable = reading?.stable ?? false;
-    final display = reading == null
+    final theme = Theme.of(context);
+
+    // Prefer locked (protected) reading for BLE display/badge
+    final displayReading = _lockedReading ?? _reading;
+    final stable = displayReading?.stable ?? false;
+    final bleHasValue = (displayReading?.valueRaw ?? 0) > 0;
+    final manualRaw = _manualRaw;
+    final canConfirm = manualRaw != null && manualRaw > 0;
+
+    final bleDisplay = displayReading == null
         ? '—'
-        : (reading.valueRaw / widget.divisor).toStringAsFixed(
-            widget.fractionDigits,
-          );
+        : (displayReading.valueRaw / widget.divisor)
+            .toStringAsFixed(widget.fractionDigits);
+
+    final Color statusColor = stable && bleHasValue
+        ? const Color(0xFF2E7D32)
+        : stable
+            ? const Color(0xFFF57F17)
+            : theme.colorScheme.onSurfaceVariant;
 
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(widget.title, style: Theme.of(context).textTheme.titleLarge),
+          Text(widget.title, style: theme.textTheme.titleLarge),
           if (widget.header != null) ...[
             const SizedBox(height: 16),
             widget.header!,
           ],
+
           const Spacer(),
+
+          // ── Live BLE value display ───────────────────────────────────────
           Center(
             child: Text(
-              '$display ${widget.unit}', // i18n-ignore: numeric value + unit
-              style: const TextStyle(fontSize: 56, fontWeight: FontWeight.bold),
+              '$bleDisplay ${widget.unit}', // i18n-ignore: numeric value + unit
+              style: TextStyle(
+                fontSize: 48,
+                fontWeight: FontWeight.bold,
+                color: stable && bleHasValue ? const Color(0xFF2E7D32) : null,
+              ),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
+
+          // ── Stability badge ──────────────────────────────────────────────
           Center(
             child: Chip(
               avatar: Icon(
-                stable ? Icons.check_circle : Icons.sync,
-                color: stable ? const Color(0xFF2E7D32) : null,
+                stable && bleHasValue
+                    ? Icons.lock
+                    : stable
+                        ? Icons.sync_problem
+                        : Icons.sync,
+                size: 18,
+                color: statusColor,
               ),
-              label: Text(stable ? l10n.stabilityStable : l10n.stabilityHold),
+              label: Text(
+                stable && bleHasValue
+                    ? l10n.stabilityStable
+                    : l10n.stabilityHold,
+                style: TextStyle(color: statusColor),
+              ),
+              side: BorderSide(color: statusColor.withValues(alpha: 0.4)),
             ),
           ),
+
           const Spacer(),
-          FilledButton(
-            onPressed:
-                stable ? () => widget.onConfirm(reading!.valueRaw) : null,
+
+          // ── Manual entry field ───────────────────────────────────────────
+          // Auto-filled from BLE on stable lock; user can tap to edit freely.
+          TextField(
+            controller: _manualController,
+            focusNode: _manualFocus,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+            ],
+            onChanged: (_) => setState(() {}),
+            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
+            textAlign: TextAlign.center,
+            decoration: InputDecoration(
+              labelText: widget.title,
+              suffixText: widget.unit,
+              hintText: l10n.manualInputHint,
+              border: const OutlineInputBorder(),
+              prefixIcon: const Icon(Icons.edit),
+              filled: true,
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // ── Auto-confirm toggle ──────────────────────────────────────────
+          SwitchListTile(
+            value: _autoConfirm,
+            onChanged: (v) => setState(() => _autoConfirm = v),
+            title: Text(l10n.autoFillOnLock),
+            subtitle: Text(l10n.autoFillOnLockHelp),
+            contentPadding: EdgeInsets.zero,
+          ),
+          const SizedBox(height: 12),
+
+          // ── Take Measurement + Zero buttons ─────────────────────────────
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _taring ? null : _tare,
+                  icon: _taring
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.exposure_zero),
+                  label: Text(l10n.deviceZero),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(0, 48),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                flex: 2,
+                child: FilledButton.tonalIcon(
+                  onPressed: _triggering ? null : _triggerMeasurement,
+                  icon: _triggering
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.play_arrow),
+                  label: Text(l10n.deviceTakeMeasurement),
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size(0, 48),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // ── Use this value / Confirm ─────────────────────────────────────
+          // Always reads from the text field — so works for both BLE auto-fill
+          // and manual entry.
+          FilledButton.icon(
+            onPressed: canConfirm ? () => widget.onConfirm(manualRaw) : null,
+            icon: const Icon(Icons.check),
+            label: Text(canConfirm
+                ? l10n.useValue(_manualController.text, widget.unit)
+                : l10n.confirm),
             style: FilledButton.styleFrom(
               minimumSize: const Size.fromHeight(56),
             ),
-            child: Text(l10n.confirm),
           ),
         ],
       ),

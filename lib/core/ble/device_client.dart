@@ -34,4 +34,12 @@ abstract class DeviceClient {
 
   /// Serial of the connected device, stored on the measurement row.
   String? get deviceSerial;
+
+  /// Sends 0x02 to the ESP32 control characteristic — triggers one capture
+  /// cycle (jitter → lock). Equivalent to pressing the physical BOOT button.
+  Future<void> triggerMeasurement();
+
+  /// Sends 0x01 to the ESP32 control characteristic — tares/zeros the scale
+  /// and resets the encoder to 0. Equivalent to long-pressing BOOT.
+  Future<void> tare();
 }

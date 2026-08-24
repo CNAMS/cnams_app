@@ -60,9 +60,9 @@ final referralsProvider =
 });
 
 /// Toggle to switch between Real BLE Hardware (ESP32-S3) and synthetic mock data.
-/// Defaults to false so headless unit/widget tests and CI pass without hardware.
-/// Set to true to connect to the real ESP32-S3 scale!
-final useRealBleDeviceProvider = StateProvider<bool>((ref) => false);
+/// Defaults to true — connects to the real ESP32-S3 scale via flutter_blue_plus.
+/// Set to false for headless unit/widget tests or offline UI work without hardware.
+final useRealBleDeviceProvider = StateProvider<bool>((ref) => true);
 
 /// The measuring device. Returns RealDeviceClient when useRealBleDeviceProvider
 /// is true, or MockDeviceClient when false.
@@ -73,6 +73,7 @@ final deviceClientProvider = Provider<DeviceClient>(
       return RealDeviceClient(
         serviceUuid: Guid('4fafc201-1fb5-459e-8fcc-c5c9c331914b'),
         measurementCharUuid: Guid('beb5483e-36e1-4688-b7f5-ea07361b26a8'),
+        controlCharUuid: Guid('beb5483f-36e1-4688-b7f5-ea07361b26a8'),
         deviceNamePrefix: 'CGMS',
       );
     }

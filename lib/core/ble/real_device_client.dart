@@ -24,6 +24,7 @@ class RealDeviceClient implements DeviceClient {
   RealDeviceClient({
     required this.serviceUuid,
     required this.measurementCharUuid,
+    this.controlCharUuid,
     this.deviceNamePrefix = 'CGMS',
     this.codec = const PacketCodec(),
     this.scanTimeout = const Duration(seconds: 15),
@@ -31,6 +32,11 @@ class RealDeviceClient implements DeviceClient {
 
   final Guid serviceUuid;
   final Guid measurementCharUuid;
+
+  /// Optional control characteristic UUID (BEB5483F-...).
+  /// When present, triggerMeasurement() and tare() write to it.
+  final Guid? controlCharUuid;
+
   final String deviceNamePrefix;
   final PacketCodec codec;
   final Duration scanTimeout;
@@ -40,6 +46,7 @@ class RealDeviceClient implements DeviceClient {
   final List<StreamSubscription<dynamic>> _subs = [];
   BluetoothDevice? _device;
   String? _serial;
+  BluetoothCharacteristic? _controlChar;
 
   @override
   String? get deviceSerial => _serial;
@@ -62,12 +69,24 @@ class RealDeviceClient implements DeviceClient {
 
     final services = await device.discoverServices();
     final service = services.firstWhere((s) => s.uuid == serviceUuid);
-    final characteristic = service.characteristics.firstWhere(
+
+    // Subscribe to measurement notifications
+    final measureChar = service.characteristics.firstWhere(
       (c) => c.uuid == measurementCharUuid,
     );
+    await measureChar.setNotifyValue(true);
+    _subs.add(measureChar.onValueReceived.listen(_onBytes));
 
-    await characteristic.setNotifyValue(true);
-    _subs.add(characteristic.onValueReceived.listen(_onBytes));
+    // Hold a ref to the control characteristic if the UUID was provided
+    final ctlUuid = controlCharUuid;
+    if (ctlUuid != null) {
+      _controlChar = service.characteristics.firstWhere(
+        (c) => c.uuid == ctlUuid,
+        orElse: () => throw StateError(
+          'Control characteristic $ctlUuid not found on device',
+        ),
+      );
+    }
   }
 
   void _onBytes(List<int> bytes) {
@@ -82,12 +101,27 @@ class RealDeviceClient implements DeviceClient {
   Stream<DeviceReading> readings(DeviceChannel channel) =>
       _packets.stream.where((p) => p.channel == channel).map((p) => p.reading);
 
+  /// Writes 0x02 to the control characteristic → triggers one capture cycle
+  /// on the ESP32 (jitter → stable lock), same as pressing the BOOT button.
+  @override
+  Future<void> triggerMeasurement() async {
+    await _controlChar?.write([0x02], withoutResponse: false);
+  }
+
+  /// Writes 0x01 to the control characteristic → tares the load cell and
+  /// resets the encoder to zero on the ESP32.
+  @override
+  Future<void> tare() async {
+    await _controlChar?.write([0x01], withoutResponse: false);
+  }
+
   @override
   Future<void> disconnect() async {
     for (final sub in _subs) {
       await sub.cancel();
     }
     _subs.clear();
+    _controlChar = null;
     await _device?.disconnect();
     _device = null;
     _serial = null;

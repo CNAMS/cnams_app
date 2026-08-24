@@ -108,6 +108,18 @@
   "captureStepResult": "परिणाम",
   "stabilityHold": "स्थिर रखें…",
   "stabilityStable": "स्थिर",
+  "autoFillOnLock": "स्थिर होने पर स्वतः भरें",
+  "autoFillOnLockHelp": "माप स्थिर होने पर अपने आप आगे बढ़ें",
+  "deviceZero": "शून्य करें",
+  "deviceTakeMeasurement": "माप लें",
+  "useValue": "{value} {unit} का उपयोग करें",
+  "@useValue": {
+    "placeholders": {
+      "value": { "type": "String" },
+      "unit": { "type": "String" }
+    }
+  },
+  "manualInputHint": "सेंसर से स्वतः भरा जाएगा या मैन्युअल लिखें",
   "confirm": "पुष्टि करें",
   "next": "आगे",
   "positionLying": "लेटाकर",

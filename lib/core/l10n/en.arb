@@ -102,6 +102,18 @@
   "captureStepResult": "Result",
   "stabilityHold": "Hold steady…",
   "stabilityStable": "Stable",
+  "autoFillOnLock": "Auto-fill on stable lock",
+  "autoFillOnLockHelp": "Advances automatically when reading locks",
+  "deviceZero": "Zero",
+  "deviceTakeMeasurement": "Take Measurement",
+  "useValue": "Use {value} {unit}",
+  "@useValue": {
+    "placeholders": {
+      "value": { "type": "String" },
+      "unit": { "type": "String" }
+    }
+  },
+  "manualInputHint": "Auto-filled from sensor or type manually",
   "confirm": "Confirm",
   "next": "Next",
   "positionLying": "Lying",
