@@ -334,7 +334,7 @@ class _DeviceCaptureStepState extends State<_DeviceCaptureStep> {
                     : l10n.stabilityHold,
                 style: TextStyle(color: statusColor),
               ),
-              side: BorderSide(color: statusColor.withOpacity(0.4)),
+              side: BorderSide(color: statusColor.withValues(alpha: 0.4)),
             ),
           ),
 
@@ -355,7 +355,7 @@ class _DeviceCaptureStepState extends State<_DeviceCaptureStep> {
             decoration: InputDecoration(
               labelText: widget.title,
               suffixText: widget.unit,
-              hintText: 'Auto-filled from sensor or type manually',
+              hintText: l10n.manualInputHint,
               border: const OutlineInputBorder(),
               prefixIcon: const Icon(Icons.edit),
               filled: true,
@@ -367,8 +367,8 @@ class _DeviceCaptureStepState extends State<_DeviceCaptureStep> {
           SwitchListTile(
             value: _autoConfirm,
             onChanged: (v) => setState(() => _autoConfirm = v),
-            title: const Text('Auto-fill on stable lock'),
-            subtitle: const Text('Advances automatically when reading locks'),
+            title: Text(l10n.autoFillOnLock),
+            subtitle: Text(l10n.autoFillOnLockHelp),
             contentPadding: EdgeInsets.zero,
           ),
           const SizedBox(height: 12),
@@ -386,7 +386,7 @@ class _DeviceCaptureStepState extends State<_DeviceCaptureStep> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.exposure_zero),
-                  label: const Text('Zero'),
+                  label: Text(l10n.deviceZero),
                   style: OutlinedButton.styleFrom(
                     minimumSize: const Size(0, 48),
                   ),
@@ -404,7 +404,7 @@ class _DeviceCaptureStepState extends State<_DeviceCaptureStep> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.play_arrow),
-                  label: const Text('Take Measurement'),
+                  label: Text(l10n.deviceTakeMeasurement),
                   style: FilledButton.styleFrom(
                     minimumSize: const Size(0, 48),
                   ),
@@ -418,10 +418,10 @@ class _DeviceCaptureStepState extends State<_DeviceCaptureStep> {
           // Always reads from the text field — so works for both BLE auto-fill
           // and manual entry.
           FilledButton.icon(
-            onPressed: canConfirm ? () => widget.onConfirm(manualRaw!) : null,
+            onPressed: canConfirm ? () => widget.onConfirm(manualRaw) : null,
             icon: const Icon(Icons.check),
             label: Text(canConfirm
-                ? 'Use ${_manualController.text} ${widget.unit}' // i18n-ignore
+                ? l10n.useValue(_manualController.text, widget.unit)
                 : l10n.confirm),
             style: FilledButton.styleFrom(
               minimumSize: const Size.fromHeight(56),
