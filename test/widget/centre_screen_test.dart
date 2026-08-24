@@ -57,7 +57,7 @@ void main() {
         ),
       ),
     );
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     // Aarav is SAM (flagged) and overdue; Diya is neither.
     expect(find.text('Aarav'), findsWidgets);

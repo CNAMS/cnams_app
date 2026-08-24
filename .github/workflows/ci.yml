@@ -4,14 +4,42 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: subosito/flutter-action@v2
+
+      - name: Setup Java for Gradle
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Gradle Cache
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Setup Flutter with SDK Caching
+        uses: subosito/flutter-action@v2
         with:
           channel: stable
+          cache: true
+          cache-key: "flutter-:os:-:channel:-:version:-:arch:-:hash:"
+
+      - name: Cache Pub Dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pub-cache
+            .dart_tool/
+          key: ${{ runner.os }}-pub-${{ hashFiles('**/pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-
+
       - run: flutter pub get
 
       # Generated code (drift, l10n) is intentionally not committed, so
@@ -20,11 +48,47 @@ jobs:
       - run: dart run build_runner build --delete-conflicting-outputs
 
       # Formatting excludes generated files (see the format target below).
-      - run: dart format --output=none --set-exit-if-changed $(git ls-files '*.dart' | grep -v -E '\.g\.dart$|/generated/')
+      - run: dart format --output=none --set-exit-if-changed $(git ls-files 'lib/*.dart' 'test/*.dart' | grep -v -E '\.g\.dart$|/generated/')
 
       # NFR-16: fail the build on hardcoded user-facing strings.
       - run: dart run tool/check_hardcoded_strings.dart
 
       - run: flutter analyze
-      - run: flutter test
+
+      # Run Flutter test suite with detailed Markdown summary & report
+      - name: Run Flutter Tests & Generate Report
+        run: dart run tool/report_tests.dart
+
+      # Post/update PR comment with test report if triggered from a Pull Request
+      - name: Comment Test Report on PR
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            if (fs.existsSync('test_summary.md')) {
+              const report = fs.readFileSync('test_summary.md', 'utf8');
+              const { data: comments } = await github.rest.issues.listComments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+              });
+              const botComment = comments.find(c => c.user.type === 'Bot' && c.body.includes('Flutter Test Suite Report'));
+              if (botComment) {
+                await github.rest.issues.updateComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: botComment.id,
+                  body: report,
+                });
+              } else {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.issue.number,
+                  body: report,
+                });
+              }
+            }
+
       - run: flutter build apk --release

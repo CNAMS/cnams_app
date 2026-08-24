@@ -6,11 +6,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:cgms_app/core/auth/app_role.dart';
 import 'package:cgms_app/core/auth/pin_auth.dart';
 import 'package:cgms_app/core/auth/secure_store.dart';
 import 'package:cgms_app/core/ble/device_client.dart';
 import 'package:cgms_app/core/ble/mock_device_client.dart';
+import 'package:cgms_app/core/ble/real_device_client.dart';
 import 'package:cgms_app/core/data/centre_repository.dart';
 import 'package:cgms_app/core/data/child_repository.dart';
 import 'package:cgms_app/core/data/measurement_repository.dart';
@@ -57,10 +59,25 @@ final referralsProvider =
   return ref.watch(referralRepositoryProvider).watchForChild(childId);
 });
 
-/// The measuring device. P2 always returns the mock; P3 swaps in the real
-/// flutter_blue_plus client behind the same interface.
+/// Toggle to switch between Real BLE Hardware (ESP32-S3) and synthetic mock data.
+/// Defaults to false so headless unit/widget tests and CI pass without hardware.
+/// Set to true to connect to the real ESP32-S3 scale!
+final useRealBleDeviceProvider = StateProvider<bool>((ref) => false);
+
+/// The measuring device. Returns RealDeviceClient when useRealBleDeviceProvider
+/// is true, or MockDeviceClient when false.
 final deviceClientProvider = Provider<DeviceClient>(
-  (ref) => MockDeviceClient(),
+  (ref) {
+    final useReal = ref.watch(useRealBleDeviceProvider);
+    if (useReal) {
+      return RealDeviceClient(
+        serviceUuid: Guid('4fafc201-1fb5-459e-8fcc-c5c9c331914b'),
+        measurementCharUuid: Guid('beb5483e-36e1-4688-b7f5-ea07361b26a8'),
+        deviceNamePrefix: 'CGMS',
+      );
+    }
+    return MockDeviceClient();
+  },
 );
 
 /// The centre the app is currently operating in. P1 resolves this to the single

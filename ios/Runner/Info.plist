@@ -45,5 +45,10 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- Bluetooth Low Energy Permissions for ESP32-S3 Scale -->
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>Ankur needs Bluetooth access to connect to the smart growth measuring scale.</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>Ankur needs Bluetooth access to communicate with the measuring device.</string>
 </dict>
 </plist>

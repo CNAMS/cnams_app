@@ -60,7 +60,10 @@ Future<Uint8List> buildParentCardPdf(
           pw.SizedBox(height: 4),
           pw.Text(
             data.childName,
-            style: pw.TextStyle(fontSize: 22, fontWeight: pw.FontWeight.bold),
+            style: const pw.TextStyle(
+              fontSize: 22,
+              fontWeight: pw.FontWeight.bold,
+            ),
           ),
           pw.Text(data.ageLabel),
           pw.SizedBox(height: 16),
@@ -71,7 +74,7 @@ Future<Uint8List> buildParentCardPdf(
             color: data.bandColor,
             child: pw.Text(
               data.classificationLabel,
-              style: pw.TextStyle(
+              style: const pw.TextStyle(
                 fontSize: 20,
                 fontWeight: pw.FontWeight.bold,
                 color: PdfColors.white,
