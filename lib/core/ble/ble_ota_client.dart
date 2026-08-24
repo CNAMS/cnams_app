@@ -37,8 +37,7 @@ class DeviceMetadata {
 }
 
 class BleOtaClient {
-  static final Guid serviceUuid =
-      Guid('4fafc201-1fb5-459e-8fcc-c5c9c331914b');
+  static final Guid serviceUuid = Guid('4fafc201-1fb5-459e-8fcc-c5c9c331914b');
   static final Guid measureCharUuid =
       Guid('beb5483e-36e1-4688-b7f5-ea07361b26a8');
   static final Guid controlCharUuid =
@@ -182,7 +181,8 @@ class BleOtaClient {
 
     for (var i = 0; i < totalChunks; i++) {
       final start = i * chunkSize;
-      final end = (start + chunkSize < totalBytes) ? start + chunkSize : totalBytes;
+      final end =
+          (start + chunkSize < totalBytes) ? start + chunkSize : totalBytes;
       final chunk = firmwareBytes.sublist(start, end);
 
       await otaDataChar.write(chunk, withoutResponse: true);
