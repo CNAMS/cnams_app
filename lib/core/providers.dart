@@ -13,6 +13,7 @@ import 'package:cgms_app/core/ble/device_client.dart';
 import 'package:cgms_app/core/ble/mock_device_client.dart';
 import 'package:cgms_app/core/ble/real_device_client.dart';
 import 'package:cgms_app/core/ble/relay_device_client.dart';
+import 'package:cgms_app/core/ble/scale_pairing_controller.dart';
 import 'package:cgms_app/core/data/centre_repository.dart';
 import 'package:cgms_app/core/data/child_repository.dart';
 import 'package:cgms_app/core/data/measurement_repository.dart';
@@ -60,28 +61,30 @@ final referralsProvider =
 });
 
 /// BLE Connection Modes:
-/// - [BleMode.relay]: Live real ESP32-S3 data relayed over TCP (10.0.2.2) to Emulator (Default).
-/// - [BleMode.real]: Direct Native BLE via flutter_blue_plus (for Physical Phones).
+/// - [BleMode.real]: Direct Native BLE via flutter_blue_plus (Default for Physical Phones).
+/// - [BleMode.relay]: Live real ESP32-S3 data relayed over TCP (10.0.2.2) to Emulator.
 /// - [BleMode.mock]: Synthetic offline test data.
-enum BleMode { relay, real, mock }
+enum BleMode { real, relay, mock }
 
-final bleModeProvider = StateProvider<BleMode>((ref) => BleMode.relay);
+final bleModeProvider = StateProvider<BleMode>((ref) => BleMode.real);
 
-/// The measuring device. Returns RelayDeviceClient (for emulator), RealDeviceClient
-/// (for physical phone), or MockDeviceClient (for offline tests).
+/// The measuring device. Returns RealDeviceClient (for physical phone), RelayDeviceClient
+/// (for emulator), or MockDeviceClient (for offline tests).
 final deviceClientProvider = Provider<DeviceClient>(
   (ref) {
     final mode = ref.watch(bleModeProvider);
+    final pairedScale = ref.watch(scalePairingProvider);
     switch (mode) {
-      case BleMode.relay:
-        return RelayDeviceClient();
       case BleMode.real:
         return RealDeviceClient(
           serviceUuid: Guid('4fafc201-1fb5-459e-8fcc-c5c9c331914b'),
           measurementCharUuid: Guid('beb5483e-36e1-4688-b7f5-ea07361b26a8'),
           controlCharUuid: Guid('beb5483f-36e1-4688-b7f5-ea07361b26a8'),
+          targetDeviceId: pairedScale.id,
           deviceNamePrefix: 'CGMS',
         );
+      case BleMode.relay:
+        return RelayDeviceClient();
       case BleMode.mock:
         return MockDeviceClient();
     }
