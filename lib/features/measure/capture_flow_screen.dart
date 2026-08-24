@@ -194,8 +194,9 @@ class _DeviceCaptureStep extends StatefulWidget {
 class _DeviceCaptureStepState extends State<_DeviceCaptureStep> {
   StreamSubscription<DeviceReading>? _sub;
   DeviceReading? _reading;
-  DeviceReading? _lockedReading; // non-zero stable reading, protected from zero-glitch
-  bool _autoConfirm = true;      // auto-advance when stable
+  DeviceReading?
+      _lockedReading; // non-zero stable reading, protected from zero-glitch
+  bool _autoConfirm = true; // auto-advance when stable
   bool _triggering = false;
   bool _taring = false;
 
@@ -328,7 +329,9 @@ class _DeviceCaptureStepState extends State<_DeviceCaptureStep> {
                 color: statusColor,
               ),
               label: Text(
-                stable && bleHasValue ? l10n.stabilityStable : l10n.stabilityHold,
+                stable && bleHasValue
+                    ? l10n.stabilityStable
+                    : l10n.stabilityHold,
                 style: TextStyle(color: statusColor),
               ),
               side: BorderSide(color: statusColor.withOpacity(0.4)),
@@ -378,7 +381,8 @@ class _DeviceCaptureStepState extends State<_DeviceCaptureStep> {
                   onPressed: _taring ? null : _tare,
                   icon: _taring
                       ? const SizedBox(
-                          width: 16, height: 16,
+                          width: 16,
+                          height: 16,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.exposure_zero),
@@ -395,7 +399,8 @@ class _DeviceCaptureStepState extends State<_DeviceCaptureStep> {
                   onPressed: _triggering ? null : _triggerMeasurement,
                   icon: _triggering
                       ? const SizedBox(
-                          width: 16, height: 16,
+                          width: 16,
+                          height: 16,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.play_arrow),
@@ -427,7 +432,6 @@ class _DeviceCaptureStepState extends State<_DeviceCaptureStep> {
     );
   }
 }
-
 
 class _PositionPicker extends StatelessWidget {
   const _PositionPicker({

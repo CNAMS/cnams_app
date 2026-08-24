@@ -70,7 +70,7 @@ final deviceClientProvider = Provider<DeviceClient>(
   (ref) {
     final useReal = ref.watch(useRealBleDeviceProvider);
     if (useReal) {
-    return RealDeviceClient(
+      return RealDeviceClient(
         serviceUuid: Guid('4fafc201-1fb5-459e-8fcc-c5c9c331914b'),
         measurementCharUuid: Guid('beb5483e-36e1-4688-b7f5-ea07361b26a8'),
         controlCharUuid: Guid('beb5483f-36e1-4688-b7f5-ea07361b26a8'),
