@@ -193,8 +193,9 @@ class SettingsScreen extends ConsumerWidget {
                                       pairedScale.name ?? pairedScale.id!)
                                   : l10n.bleScaleNotPaired,
                               style: TextStyle(
-                                fontWeight:
-                                    isPaired ? FontWeight.bold : FontWeight.normal,
+                                fontWeight: isPaired
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
                               ),
                             ),
                             subtitle: Text(
@@ -215,7 +216,8 @@ class SettingsScreen extends ConsumerWidget {
                                     label: Text(l10n.bleScalePairAction),
                                     onPressed: () => showDialog<void>(
                                       context: context,
-                                      builder: (_) => const _ScalePairingDialog(),
+                                      builder: (_) =>
+                                          const _ScalePairingDialog(),
                                     ),
                                   ),
                           );
