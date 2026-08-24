@@ -3,6 +3,7 @@
 // P1 shipped the language switch. P4 adds the Data & security section: the sync
 // backlog and dead-letter counts, CSV export (shared as a file), and PIN setup.
 
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -12,7 +13,9 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:cgms_app/core/auth/auth_controller.dart';
+import 'package:cgms_app/core/ble/scale_pairing_controller.dart';
 import 'package:cgms_app/core/l10n/generated/app_localizations.dart';
 import 'package:cgms_app/core/providers.dart';
 import 'package:cgms_app/core/settings/locale_controller.dart';
@@ -164,6 +167,58 @@ class SettingsScreen extends ConsumerWidget {
                     ],
                   ),
                 ),
+                SectionTitle(title: l10n.settingsBleScale),
+                PremiumCard(
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+                  child: Consumer(
+                    builder: (context, ref, _) {
+                      final pairedScale = ref.watch(scalePairingProvider);
+                      final isPaired = pairedScale.isPaired;
+
+                      return ListTile(
+                        leading: Icon(
+                          isPaired
+                              ? Icons.bluetooth_connected
+                              : Icons.bluetooth_searching,
+                          color: isPaired
+                              ? const Color(0xFF2E7D32)
+                              : Theme.of(context).colorScheme.primary,
+                        ),
+                        title: Text(
+                          isPaired
+                              ? l10n.bleScalePaired(
+                                  pairedScale.name ?? pairedScale.id!)
+                              : l10n.bleScaleNotPaired,
+                          style: TextStyle(
+                            fontWeight:
+                                isPaired ? FontWeight.bold : FontWeight.normal,
+                          ),
+                        ),
+                        subtitle: Text(
+                          isPaired
+                              ? (pairedScale.id ?? '')
+                              : l10n.settingsBleScaleSubtitle,
+                        ),
+                        trailing: isPaired
+                            ? TextButton.icon(
+                                icon: const Icon(Icons.link_off, size: 16),
+                                label: Text(l10n.bleScaleUnpairAction),
+                                onPressed: () => ref
+                                    .read(scalePairingProvider.notifier)
+                                    .unpair(),
+                              )
+                            : FilledButton.tonalIcon(
+                                icon: const Icon(Icons.search, size: 16),
+                                label: Text(l10n.bleScalePairAction),
+                                onPressed: () => showDialog<void>(
+                                  context: context,
+                                  builder: (_) => const _ScalePairingDialog(),
+                                ),
+                              ),
+                      );
+                    },
+                  ),
+                ),
                 SectionTitle(title: l10n.settingsAbout),
                 PremiumCard(
                   padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
@@ -265,6 +320,174 @@ class _LanguageOption extends StatelessWidget {
         ),
       ),
       trailing: selected ? Icon(Icons.check, color: color) : null,
+    );
+  }
+}
+
+/// Dialog that scans for nearby CGMS scales and allows the worker to pair one.
+class _ScalePairingDialog extends ConsumerStatefulWidget {
+  const _ScalePairingDialog();
+
+  @override
+  ConsumerState<_ScalePairingDialog> createState() =>
+      _ScalePairingDialogState();
+}
+
+class _ScalePairingDialogState extends ConsumerState<_ScalePairingDialog> {
+  List<ScanResult> _devices = [];
+  bool _scanning = false;
+  StreamSubscription<List<ScanResult>>? _scanSub;
+  StreamSubscription<bool>? _scanningSub;
+
+  @override
+  void initState() {
+    super.initState();
+    _startScan();
+  }
+
+  Future<void> _startScan() async {
+    _devices.clear();
+    setState(() => _scanning = true);
+
+    _scanSub = FlutterBluePlus.scanResults.listen((results) {
+      if (mounted) {
+        // Filter devices matching CGMS prefix or service UUID
+        final cgms = results.where((r) {
+          final name = r.device.platformName;
+          final advName = r.advertisementData.advName;
+          return name.startsWith('CGMS') ||
+              advName.startsWith('CGMS') ||
+              r.advertisementData.serviceUuids
+                  .contains(Guid('4fafc201-1fb5-459e-8fcc-c5c9c331914b'));
+        }).toList();
+
+        // Sort by signal strength (strongest first)
+        cgms.sort((a, b) => b.rssi.compareTo(a.rssi));
+
+        setState(() {
+          _devices = cgms;
+        });
+      }
+    });
+
+    _scanningSub = FlutterBluePlus.isScanning.listen((isScanning) {
+      if (mounted) setState(() => _scanning = isScanning);
+    });
+
+    try {
+      await FlutterBluePlus.startScan(
+        withServices: [Guid('4fafc201-1fb5-459e-8fcc-c5c9c331914b')],
+        timeout: const Duration(seconds: 10),
+      );
+    } catch (_) {
+      // Fallback: scan without service filter if device advertises without UUID in packet
+      await FlutterBluePlus.startScan(timeout: const Duration(seconds: 10));
+    }
+  }
+
+  @override
+  void dispose() {
+    _scanSub?.cancel();
+    _scanningSub?.cancel();
+    FlutterBluePlus.stopScan();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+
+    return AlertDialog(
+      title: Row(
+        children: [
+          const Icon(Icons.bluetooth_searching),
+          const SizedBox(width: 8),
+          Expanded(child: Text(l10n.settingsBleScale)),
+          if (_scanning)
+            const SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+        ],
+      ),
+      content: SizedBox(
+        width: double.maxFinite,
+        child: _devices.isEmpty
+            ? Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox(height: 24),
+                  if (_scanning) ...[
+                    Text(l10n.bleScaleScanning, textAlign: TextAlign.center),
+                  ] else ...[
+                    const Icon(Icons.bluetooth_disabled,
+                        size: 40, color: Colors.grey),
+                    const SizedBox(height: 12),
+                    Text(l10n.bleScaleNoDevicesFound,
+                        textAlign: TextAlign.center),
+                    const SizedBox(height: 12),
+                    FilledButton.tonalIcon(
+                      onPressed: _startScan,
+                      icon: const Icon(Icons.refresh),
+                      label: Text(l10n.retry),
+                    ),
+                  ],
+                  const SizedBox(height: 24),
+                ],
+              )
+            : ListView.separated(
+                shrinkWrap: true,
+                itemCount: _devices.length,
+                separatorBuilder: (_, __) => const Divider(height: 1),
+                itemBuilder: (context, i) {
+                  final r = _devices[i];
+                  final name = r.device.platformName.isNotEmpty
+                      ? r.device.platformName
+                      : (r.advertisementData.advName.isNotEmpty
+                          ? r.advertisementData.advName
+                          : 'CGMS Scale'); // i18n-ignore
+                  final id = r.device.remoteId.str;
+                  final rssi = r.rssi;
+
+                  return ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: CircleAvatar(
+                      backgroundColor: theme.colorScheme.primaryContainer,
+                      child: const Icon(Icons.scale),
+                    ),
+                    title: Text(
+                      name,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: Text(id),
+                    trailing: Chip(
+                      label: Text('$rssi dBm'), // i18n-ignore: metric
+                      visualDensity: VisualDensity.compact,
+                    ),
+                    onTap: () async {
+                      await ref
+                          .read(scalePairingProvider.notifier)
+                          .pair(id, name);
+                      if (context.mounted) {
+                        Navigator.of(context).pop();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                              content: Text(l10n.bleScalePairSuccess(name))),
+                        );
+                      }
+                    },
+                  );
+                },
+              ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(l10n.cancel),
+        ),
+      ],
     );
   }
 }

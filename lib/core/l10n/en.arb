@@ -233,5 +233,20 @@
   "centreFlaggedChildren": "Flagged children",
   "centreOverdueChildren": "Overdue children",
   "centreNoneFlagged": "No flagged children",
-  "centreNoneOverdue": "No overdue children"
+  "centreNoneOverdue": "No overdue children",
+  "settingsBleScale": "Bluetooth scale",
+  "settingsBleScaleSubtitle": "Pair with your assigned measurement hardware",
+  "bleScalePaired": "Paired with {name}",
+  "@bleScalePaired": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "bleScaleNotPaired": "No scale paired",
+  "bleScalePairAction": "Pair scale",
+  "bleScaleUnpairAction": "Unpair scale",
+  "bleScaleScanning": "Searching for nearby scales…",
+  "bleScaleNoDevicesFound": "No scales found nearby. Ensure scale is ON.",
+  "bleScalePairSuccess": "Successfully paired with {name}",
+  "@bleScalePairSuccess": {
+    "placeholders": { "name": { "type": "String" } }
+  }
 }

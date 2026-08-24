@@ -239,5 +239,20 @@
   "centreFlaggedChildren": "चिह्नित बच्चे",
   "centreOverdueChildren": "बकाया बच्चे",
   "centreNoneFlagged": "कोई चिह्नित बच्चा नहीं",
-  "centreNoneOverdue": "कोई बकाया बच्चा नहीं"
+  "centreNoneOverdue": "कोई बकाया बच्चा नहीं",
+  "settingsBleScale": "ब्लूटूथ स्केल",
+  "settingsBleScaleSubtitle": "अपने निर्धारित उपकरण से जोड़ें",
+  "bleScalePaired": "{name} से जुड़ा हुआ है",
+  "@bleScalePaired": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "bleScaleNotPaired": "कोई स्केल नहीं जुड़ा है",
+  "bleScalePairAction": "स्केल जोड़ें",
+  "bleScaleUnpairAction": "स्केल हटाएं",
+  "bleScaleScanning": "आस-पास के स्केल खोज रहे हैं…",
+  "bleScaleNoDevicesFound": "आस-पास कोई स्केल नहीं मिला। सुनिश्चित करें कि उपकरण चालू है।",
+  "bleScalePairSuccess": "{name} से सफलतापूर्वक जोड़ा गया",
+  "@bleScalePairSuccess": {
+    "placeholders": { "name": { "type": "String" } }
+  }
 }
