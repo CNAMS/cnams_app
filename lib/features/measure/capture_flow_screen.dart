@@ -199,10 +199,18 @@ class _DeviceCaptureStepState extends State<_DeviceCaptureStep> {
   bool _triggering = false;
   bool _taring = false;
 
+  // ── Manual entry ────────────────────────────────────────────────────────────
+  final _manualController = TextEditingController();
+  final _manualFocus = FocusNode();
+  bool _manualEditing = false; // true while user has focus on the text field
+
   @override
   void initState() {
     super.initState();
     _sub = widget.device.readings(widget.channel).listen(_onReading);
+    _manualFocus.addListener(() {
+      setState(() => _manualEditing = _manualFocus.hasFocus);
+    });
   }
 
   void _onReading(DeviceReading r) {
@@ -213,14 +221,21 @@ class _DeviceCaptureStepState extends State<_DeviceCaptureStep> {
       // a subsequent zero-stable packet (firmware ADC glitch protection).
       if (r.stable && r.valueRaw > 0) {
         _lockedReading = r;
+
+        // Auto-fill the text field with the locked value — but only if the
+        // user isn't currently editing it manually.
+        if (!_manualEditing) {
+          _manualController.text = (r.valueRaw / widget.divisor)
+              .toStringAsFixed(widget.fractionDigits);
+        }
       } else if (!r.stable) {
         // New measurement cycle started — clear the old lock
         _lockedReading = null;
       }
     });
 
-    // Auto-confirm: if stable and non-zero and toggle is on, advance
-    if (_autoConfirm && r.stable && r.valueRaw > 0) {
+    // Auto-confirm: stable + non-zero + toggle on + user not manually editing
+    if (_autoConfirm && r.stable && r.valueRaw > 0 && !_manualEditing) {
       widget.onConfirm(r.valueRaw);
     }
   }
@@ -228,6 +243,8 @@ class _DeviceCaptureStepState extends State<_DeviceCaptureStep> {
   @override
   void dispose() {
     _sub?.cancel();
+    _manualController.dispose();
+    _manualFocus.dispose();
     super.dispose();
   }
 
@@ -243,25 +260,33 @@ class _DeviceCaptureStepState extends State<_DeviceCaptureStep> {
     if (mounted) setState(() => _taring = false);
   }
 
+  /// Parses the manual text field back to raw integer units.
+  int? get _manualRaw {
+    final v = double.tryParse(_manualController.text.trim());
+    return v == null ? null : (v * widget.divisor).round();
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 
-    // Prefer locked (protected) reading for display; fall back to live reading
+    // Prefer locked (protected) reading for BLE display/badge
     final displayReading = _lockedReading ?? _reading;
     final stable = displayReading?.stable ?? false;
-    final hasValue = (displayReading?.valueRaw ?? 0) > 0;
+    final bleHasValue = (displayReading?.valueRaw ?? 0) > 0;
+    final manualRaw = _manualRaw;
+    final canConfirm = manualRaw != null && manualRaw > 0;
 
-    final display = displayReading == null
+    final bleDisplay = displayReading == null
         ? '—'
         : (displayReading.valueRaw / widget.divisor)
             .toStringAsFixed(widget.fractionDigits);
 
-    final Color statusColor = stable && hasValue
-        ? const Color(0xFF2E7D32)   // green — locked
+    final Color statusColor = stable && bleHasValue
+        ? const Color(0xFF2E7D32)
         : stable
-            ? const Color(0xFFF57F17) // amber — stable but zero
+            ? const Color(0xFFF57F17)
             : theme.colorScheme.onSurfaceVariant;
 
     return Padding(
@@ -277,24 +302,24 @@ class _DeviceCaptureStepState extends State<_DeviceCaptureStep> {
 
           const Spacer(),
 
-          // ── Live value display ──────────────────────────────────────────
+          // ── Live BLE value display ───────────────────────────────────────
           Center(
             child: Text(
-              '$display ${widget.unit}', // i18n-ignore: numeric value + unit
+              '$bleDisplay ${widget.unit}', // i18n-ignore: numeric value + unit
               style: TextStyle(
-                fontSize: 56,
+                fontSize: 48,
                 fontWeight: FontWeight.bold,
-                color: stable && hasValue ? const Color(0xFF2E7D32) : null,
+                color: stable && bleHasValue ? const Color(0xFF2E7D32) : null,
               ),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
 
-          // ── Stability badge ─────────────────────────────────────────────
+          // ── Stability badge ──────────────────────────────────────────────
           Center(
             child: Chip(
               avatar: Icon(
-                stable && hasValue
+                stable && bleHasValue
                     ? Icons.lock
                     : stable
                         ? Icons.sync_problem
@@ -303,9 +328,7 @@ class _DeviceCaptureStepState extends State<_DeviceCaptureStep> {
                 color: statusColor,
               ),
               label: Text(
-                stable && hasValue
-                    ? l10n.stabilityStable   // "Stable" / locked
-                    : l10n.stabilityHold,    // "Hold steady"
+                stable && bleHasValue ? l10n.stabilityStable : l10n.stabilityHold,
                 style: TextStyle(color: statusColor),
               ),
               side: BorderSide(color: statusColor.withOpacity(0.4)),
@@ -314,7 +337,30 @@ class _DeviceCaptureStepState extends State<_DeviceCaptureStep> {
 
           const Spacer(),
 
-          // ── Auto-confirm toggle ─────────────────────────────────────────
+          // ── Manual entry field ───────────────────────────────────────────
+          // Auto-filled from BLE on stable lock; user can tap to edit freely.
+          TextField(
+            controller: _manualController,
+            focusNode: _manualFocus,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+            ],
+            onChanged: (_) => setState(() {}),
+            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
+            textAlign: TextAlign.center,
+            decoration: InputDecoration(
+              labelText: widget.title,
+              suffixText: widget.unit,
+              hintText: 'Auto-filled from sensor or type manually',
+              border: const OutlineInputBorder(),
+              prefixIcon: const Icon(Icons.edit),
+              filled: true,
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // ── Auto-confirm toggle ──────────────────────────────────────────
           SwitchListTile(
             value: _autoConfirm,
             onChanged: (v) => setState(() => _autoConfirm = v),
@@ -363,14 +409,14 @@ class _DeviceCaptureStepState extends State<_DeviceCaptureStep> {
           ),
           const SizedBox(height: 12),
 
-          // ── Use this value / Confirm ────────────────────────────────────
+          // ── Use this value / Confirm ─────────────────────────────────────
+          // Always reads from the text field — so works for both BLE auto-fill
+          // and manual entry.
           FilledButton.icon(
-            onPressed: hasValue
-                ? () => widget.onConfirm(displayReading!.valueRaw)
-                : null,
+            onPressed: canConfirm ? () => widget.onConfirm(manualRaw!) : null,
             icon: const Icon(Icons.check),
-            label: Text(hasValue
-                ? 'Use ${display} ${widget.unit}'   // i18n-ignore: composed
+            label: Text(canConfirm
+                ? 'Use ${_manualController.text} ${widget.unit}' // i18n-ignore
                 : l10n.confirm),
             style: FilledButton.styleFrom(
               minimumSize: const Size.fromHeight(56),
