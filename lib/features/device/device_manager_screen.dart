@@ -1,8 +1,10 @@
 // Device Manager Screen for ESP32-S3 Smart Anthropometry Scale.
 //
 // Enables Anganwadi supervisors and workers to inspect device metadata,
-// rename the scale, calibrate weight and height sensors, and flash firmware over BLE OTA.
+// rename the scale, view real-time live sensor telemetry, calibrate weight
+// and height sensors (with Back & Revert to Factory options), and flash firmware over BLE OTA.
 
+import 'dart:async';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,6 +12,8 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:file_picker/file_picker.dart';
 
 import 'package:cgms_app/core/ble/ble_ota_client.dart';
+import 'package:cgms_app/core/ble/device_client.dart';
+import 'package:cgms_app/core/ble/packet_codec.dart';
 import 'package:cgms_app/core/ble/scale_pairing_controller.dart';
 import 'package:cgms_app/core/l10n/generated/app_localizations.dart';
 import 'package:cgms_app/shared/theme/design_tokens.dart';
@@ -25,7 +29,13 @@ class DeviceManagerScreen extends ConsumerStatefulWidget {
 class _DeviceManagerScreenState extends ConsumerState<DeviceManagerScreen> {
   BluetoothDevice? _connectedDevice;
   DeviceMetadata? _metadata;
-  bool _isLoading = false;
+
+  // Real-time live telemetry stream from ESP32
+  double? _liveWeightKg;
+  bool _isWeightStable = false;
+  double? _liveHeightCm;
+  bool _isHeightStable = false;
+  StreamSubscription<List<int>>? _measureSub;
 
   // Calibration state
   int _weightStep = 1;
@@ -50,55 +60,87 @@ class _DeviceManagerScreenState extends ConsumerState<DeviceManagerScreen> {
 
   @override
   void dispose() {
+    _measureSub?.cancel();
     _weightCalCtrl.dispose();
     _lengthCalCtrl.dispose();
     super.dispose();
   }
 
   Future<void> _connectToScale() async {
-    setState(() {
-      _isLoading = true;
-    });
-
     try {
       final pairedInfo = ref.read(scalePairingProvider);
       final pairedId = pairedInfo.id;
 
-      await FlutterBluePlus.startScan(
-        withServices: [BleOtaClient.serviceUuid],
-        timeout: const Duration(seconds: 8),
+      BluetoothDevice? device;
+
+      // 1. Instant check: Is the scale already connected?
+      final alreadyConnected = FlutterBluePlus.connectedDevices.where(
+        (d) =>
+            d.platformName.startsWith('CGMS') ||
+            (pairedId != null && d.remoteId.str == pairedId),
       );
-
-      final ScanResult result;
-      if (pairedId != null && pairedId.isNotEmpty) {
-        result = await FlutterBluePlus.scanResults
-            .expand((r) => r)
-            .firstWhere((r) => r.device.remoteId.str == pairedId);
+      if (alreadyConnected.isNotEmpty) {
+        device = alreadyConnected.first;
+      } else if (pairedId != null && pairedId.isNotEmpty) {
+        // 2. Direct instant connect using paired MAC ID without scanning
+        device = BluetoothDevice.fromId(pairedId);
+        await device.connect(timeout: const Duration(seconds: 3));
       } else {
-        final matches = await FlutterBluePlus.scanResults
-            .map((results) => results
-                .where((r) => r.device.platformName.startsWith('CGMS'))
-                .toList())
-            .firstWhere((list) => list.isNotEmpty);
-        matches.sort((a, b) => b.rssi.compareTo(a.rssi));
-        result = matches.first;
+        // 3. Fast scan with short 3-second timeout
+        await FlutterBluePlus.startScan(
+          withServices: [BleOtaClient.serviceUuid],
+          timeout: const Duration(seconds: 3),
+        );
+        final match = await FlutterBluePlus.scanResults
+            .expand((r) => r)
+            .firstWhere((r) => r.device.platformName.startsWith('CGMS'))
+            .timeout(const Duration(seconds: 3));
+        await FlutterBluePlus.stopScan();
+        device = match.device;
+        await device.connect(timeout: const Duration(seconds: 3));
       }
-      await FlutterBluePlus.stopScan();
 
-      final device = result.device;
-      await device.connect();
       _connectedDevice = device;
 
+      // 4. Fetch DIS metadata & configure live stream
       final meta = await BleOtaClient.fetchDeviceInfo(device);
-      setState(() {
-        _metadata = meta;
-        _isLoading = false;
+
+      final services = await device.discoverServices();
+      final primaryService = services.firstWhere(
+        (s) => s.uuid == BleOtaClient.serviceUuid,
+      );
+      final measureChar = primaryService.characteristics.firstWhere(
+        (c) => c.uuid == BleOtaClient.measureCharUuid,
+      );
+
+      await _measureSub?.cancel();
+      _measureSub = measureChar.lastValueStream.listen((data) {
+        if (data.length == 11) {
+          try {
+            final packet = const PacketCodec().decode(Uint8List.fromList(data));
+            if (mounted) {
+              setState(() {
+                if (packet.channel == DeviceChannel.weight) {
+                  _liveWeightKg = packet.reading.valueRaw / 1000.0;
+                  _isWeightStable = packet.reading.stable;
+                } else {
+                  _liveHeightCm = packet.reading.valueRaw / 10.0;
+                  _isHeightStable = packet.reading.stable;
+                }
+              });
+            }
+          } catch (_) {}
+        }
       });
+      await measureChar.setNotifyValue(true);
+
+      if (mounted) {
+        setState(() {
+          _metadata = meta;
+        });
+      }
     } catch (_) {
       await FlutterBluePlus.stopScan();
-      setState(() {
-        _isLoading = false;
-      });
     }
   }
 
@@ -117,7 +159,7 @@ class _DeviceManagerScreenState extends ConsumerState<DeviceManagerScreen> {
           maxLength: 24,
           decoration: InputDecoration(
             labelText: l10n.deviceRenameLabel,
-            hintText: 'CGMS-ROOM-1',
+            hintText: 'CGMS-ROOM-1', // i18n-ignore: placeholder example
           ),
         ),
         actions: [
@@ -315,11 +357,9 @@ class _DeviceManagerScreenState extends ConsumerState<DeviceManagerScreen> {
           ),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              children: [
+      body: ListView(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        children: [
                 // 1. Device Overview Card
                 Card(
                   elevation: 1,
@@ -416,7 +456,7 @@ class _DeviceManagerScreenState extends ConsumerState<DeviceManagerScreen> {
                 ),
                 const SizedBox(height: AppSpacing.md),
 
-                // 2. Sensor Calibration Card
+                // 2. Sensor Diagnostics & Calibration Cards
                 if (isConnected) ...[
                   Text(
                     l10n.deviceCalibrationTitle,
@@ -426,6 +466,8 @@ class _DeviceManagerScreenState extends ConsumerState<DeviceManagerScreen> {
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xs),
+
+                  // ── WEIGHT CALIBRATION CARD ──
                   Card(
                     elevation: 1,
                     shape: const RoundedRectangleBorder(
@@ -436,7 +478,6 @@ class _DeviceManagerScreenState extends ConsumerState<DeviceManagerScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Weight Calibration Section
                           Row(
                             children: [
                               Icon(Icons.scale,
@@ -445,11 +486,92 @@ class _DeviceManagerScreenState extends ConsumerState<DeviceManagerScreen> {
                               Text(
                                 l10n.deviceWeightCalTitle,
                                 style: const TextStyle(
-                                    fontWeight: FontWeight.bold),
+                                    fontWeight: FontWeight.bold, fontSize: 15),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 12),
+
+                          // Live Real-Time Weight Gauge
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.surfaceContainerHighest
+                                  .withValues(alpha: 0.4),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Row(
+                              mainAxisAlignment:
+                                  MainAxisAlignment.spaceBetween,
+                              children: [
+                                Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      l10n.deviceLiveSensorReading,
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.grey.shade600,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      _liveWeightKg != null
+                                          ? '${_liveWeightKg!.toStringAsFixed(2)} kg'
+                                          : '0.00 kg',
+                                      style: const TextStyle(
+                                        fontSize: 22,
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: _isWeightStable
+                                        ? Colors.green.shade100
+                                        : Colors.amber.shade100,
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Container(
+                                        width: 8,
+                                        height: 8,
+                                        decoration: BoxDecoration(
+                                          color: _isWeightStable
+                                              ? Colors.green.shade700
+                                              : Colors.amber.shade700,
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        _isWeightStable
+                                            ? l10n.deviceStableLock
+                                            : l10n.deviceLiveStream,
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          color: _isWeightStable
+                                              ? Colors.green.shade900
+                                              : Colors.amber.shade900,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+
+                          // Weight Stepper
                           if (_weightStep == 1) ...[
                             Text(
                               l10n.deviceWeightCalStep1,
@@ -457,9 +579,10 @@ class _DeviceManagerScreenState extends ConsumerState<DeviceManagerScreen> {
                                   fontSize: 12, color: Colors.grey.shade700),
                             ),
                             const SizedBox(height: 8),
-                            FilledButton.tonal(
+                            FilledButton.tonalIcon(
+                              icon: const Icon(Icons.refresh, size: 16),
+                              label: Text(l10n.deviceZeroScale),
                               onPressed: _handleWeightZero,
-                              child: Text(l10n.deviceZeroScale),
                             ),
                           ] else if (_weightStep == 2) ...[
                             Text(
@@ -471,7 +594,7 @@ class _DeviceManagerScreenState extends ConsumerState<DeviceManagerScreen> {
                             Row(
                               children: [
                                 SizedBox(
-                                  width: 120,
+                                  width: 110,
                                   child: TextField(
                                     controller: _weightCalCtrl,
                                     keyboardType:
@@ -480,15 +603,16 @@ class _DeviceManagerScreenState extends ConsumerState<DeviceManagerScreen> {
                                     decoration: const InputDecoration(
                                       suffixText: 'kg',
                                       isDense: true,
+                                      border: OutlineInputBorder(),
                                     ),
                                   ),
                                 ),
-                                const SizedBox(width: 12),
+                                const SizedBox(width: 8),
                                 FilledButton(
                                   onPressed: _handleWeightSave,
                                   child: Text(l10n.deviceSaveFactor),
                                 ),
-                                const SizedBox(width: 8),
+                                const SizedBox(width: 4),
                                 TextButton(
                                   onPressed: () =>
                                       setState(() => _weightStep = 1),
@@ -507,7 +631,8 @@ class _DeviceManagerScreenState extends ConsumerState<DeviceManagerScreen> {
                                     l10n.deviceCalSaved,
                                     style: const TextStyle(
                                         color: Colors.green,
-                                        fontWeight: FontWeight.w600),
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 12),
                                   ),
                                 ),
                                 TextButton(
@@ -524,10 +649,23 @@ class _DeviceManagerScreenState extends ConsumerState<DeviceManagerScreen> {
                               ],
                             ),
                           ],
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
 
-                          const Divider(height: 24),
-
-                          // Length Calibration Section
+                  // ── HEIGHT / STADIOMETER CALIBRATION CARD ──
+                  Card(
+                    elevation: 1,
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: AppRadius.allMd,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                           Row(
                             children: [
                               Icon(Icons.straighten,
@@ -536,11 +674,92 @@ class _DeviceManagerScreenState extends ConsumerState<DeviceManagerScreen> {
                               Text(
                                 l10n.deviceLengthCalTitle,
                                 style: const TextStyle(
-                                    fontWeight: FontWeight.bold),
+                                    fontWeight: FontWeight.bold, fontSize: 15),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 12),
+
+                          // Live Real-Time Height Gauge
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.surfaceContainerHighest
+                                  .withValues(alpha: 0.4),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Row(
+                              mainAxisAlignment:
+                                  MainAxisAlignment.spaceBetween,
+                              children: [
+                                Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      l10n.deviceLiveHeightReading,
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.grey.shade600,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      _liveHeightCm != null
+                                          ? '${_liveHeightCm!.toStringAsFixed(1)} cm'
+                                          : '0.0 cm',
+                                      style: const TextStyle(
+                                        fontSize: 22,
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 10, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: _isHeightStable
+                                        ? Colors.green.shade100
+                                        : Colors.blue.shade100,
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Container(
+                                        width: 8,
+                                        height: 8,
+                                        decoration: BoxDecoration(
+                                          color: _isHeightStable
+                                              ? Colors.green.shade700
+                                              : Colors.blue.shade700,
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        _isHeightStable
+                                            ? l10n.deviceStableLock
+                                            : l10n.deviceEncoderOnline,
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          color: _isHeightStable
+                                              ? Colors.green.shade900
+                                              : Colors.blue.shade900,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+
+                          // Height Stepper
                           if (_lengthStep == 1) ...[
                             Text(
                               l10n.deviceLengthCalStep1,
@@ -548,9 +767,10 @@ class _DeviceManagerScreenState extends ConsumerState<DeviceManagerScreen> {
                                   fontSize: 12, color: Colors.grey.shade700),
                             ),
                             const SizedBox(height: 8),
-                            FilledButton.tonal(
+                            FilledButton.tonalIcon(
+                              icon: const Icon(Icons.refresh, size: 16),
+                              label: Text(l10n.deviceZeroHeight),
                               onPressed: _handleLengthZero,
-                              child: Text(l10n.deviceZeroHeight),
                             ),
                           ] else if (_lengthStep == 2) ...[
                             Text(
@@ -562,7 +782,7 @@ class _DeviceManagerScreenState extends ConsumerState<DeviceManagerScreen> {
                             Row(
                               children: [
                                 SizedBox(
-                                  width: 120,
+                                  width: 110,
                                   child: TextField(
                                     controller: _lengthCalCtrl,
                                     keyboardType:
@@ -571,15 +791,16 @@ class _DeviceManagerScreenState extends ConsumerState<DeviceManagerScreen> {
                                     decoration: const InputDecoration(
                                       suffixText: 'cm',
                                       isDense: true,
+                                      border: OutlineInputBorder(),
                                     ),
                                   ),
                                 ),
-                                const SizedBox(width: 12),
+                                const SizedBox(width: 8),
                                 FilledButton(
                                   onPressed: _handleLengthSave,
                                   child: Text(l10n.deviceSaveFactor),
                                 ),
-                                const SizedBox(width: 8),
+                                const SizedBox(width: 4),
                                 TextButton(
                                   onPressed: () =>
                                       setState(() => _lengthStep = 1),
@@ -598,7 +819,8 @@ class _DeviceManagerScreenState extends ConsumerState<DeviceManagerScreen> {
                                     l10n.deviceCalSaved,
                                     style: const TextStyle(
                                         color: Colors.green,
-                                        fontWeight: FontWeight.w600),
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 12),
                                   ),
                                 ),
                                 TextButton(

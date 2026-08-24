@@ -283,5 +283,10 @@
   "deviceOtaFailed": "Firmware update failed",
   "deviceOk": "OK",
   "deviceCancelBack": "Cancel & Go Back",
-  "deviceRevertDefault": "Revert to Factory Default"
+  "deviceRevertDefault": "Revert to Factory Default",
+  "deviceLiveSensorReading": "Live Sensor Reading",
+  "deviceLiveHeightReading": "Live Height Reading",
+  "deviceStableLock": "Stable Lock",
+  "deviceLiveStream": "Live Stream",
+  "deviceEncoderOnline": "Encoder Online"
 }

@@ -289,5 +289,10 @@
   "deviceOtaFailed": "फर्मवेयर अपडेट विफल रहा",
   "deviceOk": "ठीक है",
   "deviceCancelBack": "रद्द करें और वापस जाएं",
-  "deviceRevertDefault": "फ़ैक्टरी डिफ़ॉल्ट पर वापस लाएं"
+  "deviceRevertDefault": "फ़ैक्टरी डिफ़ॉल्ट पर वापस लाएं",
+  "deviceLiveSensorReading": "लाइव सेंसर रीडिंग",
+  "deviceLiveHeightReading": "लाइव ऊंचाई रीडिंग",
+  "deviceStableLock": "स्थिर लॉक",
+  "deviceLiveStream": "लाइव स्ट्रीम",
+  "deviceEncoderOnline": "एनकोडर ऑनलाइन"
 }
