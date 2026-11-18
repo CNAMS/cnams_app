@@ -51,6 +51,10 @@ class MockDeviceClient implements DeviceClient {
   @override
   Future<void> connect() async => _connected = true;
 
+  /// The mock never loses its link on its own.
+  @override
+  Stream<bool> get connectionChanges => const Stream<bool>.empty();
+
   @override
   Future<void> disconnect() async => _connected = false;
 

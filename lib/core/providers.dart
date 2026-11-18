@@ -74,9 +74,10 @@ final deviceClientProvider = Provider<DeviceClient>(
   (ref) {
     final mode = ref.watch(bleModeProvider);
     final pairedScale = ref.watch(scalePairingProvider);
+    final DeviceClient client;
     switch (mode) {
       case BleMode.real:
-        return RealDeviceClient(
+        client = RealDeviceClient(
           serviceUuid: Guid('4fafc201-1fb5-459e-8fcc-c5c9c331914b'),
           measurementCharUuid: Guid('beb5483e-36e1-4688-b7f5-ea07361b26a8'),
           controlCharUuid: Guid('beb5483f-36e1-4688-b7f5-ea07361b26a8'),
@@ -84,10 +85,14 @@ final deviceClientProvider = Provider<DeviceClient>(
           deviceNamePrefix: 'CGMS',
         );
       case BleMode.relay:
-        return RelayDeviceClient();
+        client = RelayDeviceClient();
       case BleMode.mock:
-        return MockDeviceClient();
+        client = MockDeviceClient();
     }
+    // Switching mode or pairing a different scale rebuilds this provider;
+    // close the old client's link rather than leave it holding the scale.
+    ref.onDispose(client.disconnect);
+    return client;
   },
 );
 

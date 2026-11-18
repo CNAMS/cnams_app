@@ -25,6 +25,8 @@ class RelayDeviceClient implements DeviceClient {
   final StreamController<DevicePacket> _packets =
       StreamController<DevicePacket>.broadcast();
 
+  final StreamController<bool> _connection = StreamController<bool>.broadcast();
+
   Socket? _socket;
   StreamSubscription<Uint8List>? _socketSub;
   final List<int> _buffer = [];
@@ -32,6 +34,16 @@ class RelayDeviceClient implements DeviceClient {
 
   @override
   String? get deviceSerial => _connected ? 'RELAY-ESP32-S3' : null;
+
+  @override
+  Stream<bool> get connectionChanges => _connection.stream;
+
+  /// The relay socket closed or errored on its own: report it, then clean up.
+  void _onLinkLost() {
+    if (!_connected) return;
+    _connection.add(false);
+    disconnect();
+  }
 
   @override
   Future<void> connect() async {
@@ -45,12 +57,8 @@ class RelayDeviceClient implements DeviceClient {
 
       _socketSub = socket.listen(
         _onBytes,
-        onError: (err) {
-          disconnect();
-        },
-        onDone: () {
-          disconnect();
-        },
+        onError: (_) => _onLinkLost(),
+        onDone: _onLinkLost,
       );
     } catch (e) {
       // If 10.0.2.2 fails (e.g. running on Linux Desktop), try 127.0.0.1
@@ -62,13 +70,16 @@ class RelayDeviceClient implements DeviceClient {
           _connected = true;
           _socketSub = socket.listen(
             _onBytes,
-            onError: (err) => disconnect(),
-            onDone: () => disconnect(),
+            onError: (_) => _onLinkLost(),
+            onDone: _onLinkLost,
           );
           return;
         } catch (_) {}
       }
       _connected = false;
+      // Surface the failure. Returning normally here made the capture screen
+      // believe it was connected to a relay that was never there.
+      throw StateError('Could not reach the BLE relay on $host:$port: $e');
     }
   }
 
