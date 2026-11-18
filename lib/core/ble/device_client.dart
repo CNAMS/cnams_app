@@ -35,6 +35,12 @@ abstract class DeviceClient {
   /// Serial of the connected device, stored on the measurement row.
   String? get deviceSerial;
 
+  /// Emits `false` when an established link drops without [disconnect]
+  /// being called — the scale was switched off, walked out of range, or its
+  /// battery died mid-reading — so the capture screen can say so and offer a
+  /// reconnect instead of showing a frozen value.
+  Stream<bool> get connectionChanges;
+
   /// Sends 0x02 to the ESP32 control characteristic — triggers one capture
   /// cycle (jitter → lock). Equivalent to pressing the physical BOOT button.
   Future<void> triggerMeasurement();

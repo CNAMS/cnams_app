@@ -1,6 +1,13 @@
 name: Build & Release App
 
 on:
+  # Every green CI run on main publishes a release automatically, so the APK
+  # under Releases > Latest is always the current main. Gating on CI (rather
+  # than on push) means a commit that fails tests never ships.
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
   push:
     tags:
       - 'v*'
@@ -15,6 +22,11 @@ on:
         required: false
         default: 'Ankur CGMS Development Build'
 
+# Never build two releases at once; a newer main supersedes a queued one.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 permissions:
   contents: write
 
@@ -25,9 +37,12 @@ jobs:
   build-android:
     name: Build Android (All Architectures)
     runs-on: ubuntu-latest
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - name: Set up Java Development Kit (JDK 17)
         uses: actions/setup-java@v4
@@ -49,14 +64,46 @@ jobs:
           flutter gen-l10n
           dart run build_runner build --delete-conflicting-outputs
 
+      # One key (alias "ankur") signs every release, so each APK installs over
+      # the last and a worker never has to uninstall (and lose offline data)
+      # to update. Refuse to publish if the key is missing: a debug-signed APK
+      # cannot update a release-signed one.
+      - name: Restore release signing key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "::error::ANDROID_KEYSTORE_BASE64 secret is not set; refusing to publish a debug-signed APK."
+            exit 1
+          fi
+          echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/ankur-release.jks"
+          {
+            echo "storeFile=$RUNNER_TEMP/ankur-release.jks"
+            echo "storePassword=$KEYSTORE_PASSWORD"
+            echo "keyPassword=$KEY_PASSWORD"
+            echo "keyAlias=$KEY_ALIAS"
+          } > android/key.properties
+
+      # versionCode must rise with every release or Android refuses the update.
       - name: Build Universal Android APK (All CPU architectures in one file)
-        run: flutter build apk --release
+        run: flutter build apk --release --build-number=${{ github.run_number }}
 
       - name: Build Split-per-ABI Android APKs (Optimized sizes for arm64, armv7, x86_64)
-        run: flutter build apk --release --split-per-abi
+        run: flutter build apk --release --split-per-abi --build-number=${{ github.run_number }}
 
       - name: Build Android App Bundle (AAB for Google Play)
-        run: flutter build appbundle --release
+        run: flutter build appbundle --release --build-number=${{ github.run_number }}
+
+      - name: Verify the APK carries the release key
+        run: |
+          APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          "$APKSIGNER" verify --print-certs build/app/outputs/flutter-apk/app-release.apk | tee signer.txt
+          if grep -q "CN=Android Debug" signer.txt; then
+            echo "::error::APK is debug-signed"; exit 1
+          fi
 
       - name: Prepare & Organize Android Output Artifacts
         run: |
@@ -83,9 +130,12 @@ jobs:
   build-ios:
     name: Build iOS (IPA & Runner.app)
     runs-on: macos-14
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -102,7 +152,7 @@ jobs:
           dart run build_runner build --delete-conflicting-outputs
 
       - name: Build iOS (No Codesign for Development/Ad-Hoc)
-        run: flutter build ios --release --no-codesign
+        run: flutter build ios --release --no-codesign --build-number=${{ github.run_number }}
 
       - name: Package iOS IPA & Runner.app
         run: |
@@ -133,6 +183,8 @@ jobs:
     steps:
       - name: Checkout Source Code
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - name: Download Android Artifacts
         uses: actions/download-artifact@v4
@@ -152,6 +204,11 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             echo "tag=${{ github.event.inputs.release_tag }}" >> $GITHUB_OUTPUT
             echo "title=${{ github.event.inputs.release_name }}" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event_name }}" = "workflow_run" ]; then
+            VERSION=$(sed -n 's/^version: *\([^+]*\).*/\1/p' pubspec.yaml)
+            TAG="v${VERSION}-build.${{ github.run_number }}"
+            echo "tag=$TAG" >> $GITHUB_OUTPUT
+            echo "title=Ankur CGMS $VERSION (build ${{ github.run_number }})" >> $GITHUB_OUTPUT
           else
             TAG_NAME="${GITHUB_REF#refs/tags/}"
             echo "tag=$TAG_NAME" >> $GITHUB_OUTPUT
@@ -162,6 +219,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.release_info.outputs.tag }}
+          target_commitish: ${{ github.event.workflow_run.head_sha || github.sha }}
           name: ${{ steps.release_info.outputs.title }}
           draft: false
           prerelease: false
