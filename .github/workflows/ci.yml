@@ -53,7 +53,11 @@ jobs:
       # NFR-16: fail the build on hardcoded user-facing strings.
       - run: dart run tool/check_hardcoded_strings.dart
 
-      - run: flutter analyze
+      # Warnings and errors fail the build. Infos do not: Flutter 3.50 marked
+      # package:flutter/material.dart deprecated in favour of material_ui,
+      # which turned every file into an info and broke CI on stable for
+      # everyone. Migrating to material_ui is tracked separately.
+      - run: flutter analyze --no-fatal-infos
 
       # Run Flutter test suite with detailed Markdown summary & report
       - name: Run Flutter Tests & Generate Report
