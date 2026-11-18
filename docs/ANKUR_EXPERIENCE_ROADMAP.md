@@ -73,10 +73,18 @@ classification colours stay identical everywhere.
 | Role | Primary | Surface mood | Why |
 |---|---|---|---|
 | **AWW** | Deep teal `#00695C` | Warm sand, high-contrast | The current field theme — outdoor-legible, calm. Keep it. |
-| **Supervisor** | Sprout green `#2E7D32` | Warm neutral | Oversight of growth across centres. |
-| **Doctor** | Clinical blue `#1565C0` | Clean, cool white | Reads as medical; calm and precise. |
-| **Parent** | Warm amber `#E68A00` | Friendly cream | Reassuring and approachable, not clinical. |
+| **Supervisor** | Indigo `#3949AB` (was sprout green `#2E7D32`) | Cool neutral `#F5F6FB` | Oversight of growth across centres. |
+| **Doctor** | Violet `#6A40B0` (was clinical blue `#1565C0`) | Clean, cool white `#F8F6FC` | Calm and precise. |
+| **Parent** | Rose `#A8396F` (was warm amber `#E68A00`) | Soft blush `#FCF6F8` | Reassuring and approachable, not clinical. |
 | **Admin** | Slate + indigo `#4B5563` / `#5B4B8A` | Light "console" grey (**not** dark) | A developer/dashboard feel — dense, data-first, still light. |
+
+> **2026-11 palette revision.** Role accents must never be mistaken for a
+> result. Sprout green was the exact "Normal" green, clinical blue the exact
+> "Overweight" blue, and the amber sat beside "MAM" (and gave white text only
+> 2.6:1). Supervisor, Doctor and Parent moved to indigo, violet and rose; the
+> exact values, dark variants and contrast checks live in
+> `lib/shared/theme/role_palette.dart`, shared with the portal's
+> `docs/DESIGN.md`. The classification palette is unchanged.
 
 Each role theme has a light and a dark variant. Implementation: a single `AppTheme.forRole(role,
 brightness)` that reads shared tokens and swaps the primary/surface set — so a new role is a few

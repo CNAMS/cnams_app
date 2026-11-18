@@ -10,9 +10,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:cgms_app/core/auth/app_role.dart';
 import 'package:cgms_app/core/l10n/generated/app_localizations.dart';
 import 'package:cgms_app/core/providers.dart';
 import 'package:cgms_app/shared/theme/design_tokens.dart';
+import 'package:cgms_app/shared/theme/role_palette.dart';
 import 'package:cgms_app/shared/widgets/premium.dart';
 
 class AppAnalyticsScreen extends ConsumerWidget {
@@ -132,12 +134,12 @@ class _SampleTag extends StatelessWidget {
 class _RoleBars extends StatelessWidget {
   const _RoleBars();
 
-  static const _data = [
-    ('AWW', 0.85, Color(0xFF00695C)),
-    ('Sup', 0.55, Color(0xFF2E7D32)),
-    ('Doc', 0.40, Color(0xFF1565C0)),
-    ('Par', 0.70, Color(0xFFE68A00)),
-    ('Adm', 0.25, Color(0xFF4B5570)),
+  static final _data = [
+    ('AWW', 0.85, RolePalette.of(AppRole.aww).accent),
+    ('Sup', 0.55, RolePalette.of(AppRole.supervisor).accent),
+    ('Doc', 0.40, RolePalette.of(AppRole.doctor).accent),
+    ('Par', 0.70, RolePalette.of(AppRole.parent).accent),
+    ('Adm', 0.25, RolePalette.of(AppRole.admin).accent),
   ];
 
   @override

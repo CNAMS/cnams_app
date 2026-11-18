@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import 'package:cgms_app/core/auth/app_role.dart';
 import 'package:cgms_app/core/l10n/generated/app_localizations.dart';
+import 'package:cgms_app/shared/theme/role_palette.dart';
 
 String roleLabel(AppLocalizations l10n, AppRole role) => switch (role) {
       AppRole.aww => l10n.roleAww,
@@ -14,13 +15,7 @@ String roleLabel(AppLocalizations l10n, AppRole role) => switch (role) {
       AppRole.admin => l10n.roleAdmin,
     };
 
-Color roleColor(AppRole role) => switch (role) {
-      AppRole.aww => const Color(0xFF00695C),
-      AppRole.supervisor => const Color(0xFF2E7D32),
-      AppRole.doctor => const Color(0xFF1565C0),
-      AppRole.parent => const Color(0xFFE68A00),
-      AppRole.admin => const Color(0xFF4B5570),
-    };
+Color roleColor(AppRole role) => RolePalette.of(role).accent;
 
 IconData roleIcon(AppRole role) => switch (role) {
       AppRole.aww => Icons.volunteer_activism,
