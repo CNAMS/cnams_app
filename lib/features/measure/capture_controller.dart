@@ -83,7 +83,13 @@ class CaptureController extends StateNotifier<CaptureSession> {
   final MeasurementRepository _repository;
   final String workerId;
   final String appVersion;
-  final String? deviceSerial;
+
+  /// Serial of the scale the values came from, or null for hand-entered
+  /// values. Mutable because a Bluetooth scale only reports its serial once
+  /// connected, which is usually after this controller is created; the
+  /// capture screen sets it just before [save]. It decides the row's
+  /// `source` (device vs manual), which the agreement study depends on.
+  String? deviceSerial;
 
   /// The current session snapshot (public view of the protected state).
   CaptureSession get session => state;
@@ -96,7 +102,20 @@ class CaptureController extends StateNotifier<CaptureSession> {
   void setLength(int mm, {required bool recumbent}) =>
       state = state.copyWith(lengthMm: mm, recumbent: recumbent);
 
-  void setMuac(int mm) => state = state.copyWith(muacMm: mm);
+  /// Sets MUAC in mm, or clears it with null when it was not measured (for
+  /// example when bilateral oedema already decides the outcome). Never store
+  /// a 0 mm placeholder: it would read as a real, catastrophically low MUAC.
+  /// copyWith cannot express "clear", so the session is rebuilt.
+  void setMuac(int? mm) => state = CaptureSession(
+        child: state.child,
+        ageDays: state.ageDays,
+        weightG: state.weightG,
+        lengthMm: state.lengthMm,
+        recumbent: state.recumbent,
+        muacMm: mm,
+        oedema: state.oedema,
+        result: state.result,
+      );
 
   void setOedema(bool value) => state = state.copyWith(oedema: value);
 
