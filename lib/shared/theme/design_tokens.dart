@@ -10,6 +10,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:cgms_app/core/auth/app_role.dart';
+import 'package:cgms_app/shared/theme/role_palette.dart';
 
 /// 8-based spacing scale. Use these instead of ad-hoc EdgeInsets numbers.
 abstract final class AppSpacing {
@@ -84,11 +85,5 @@ LinearGradient roleGradient(AppRole role, Brightness brightness) {
   );
 }
 
-/// The primary seed per role (mirrors AppTheme's palette).
-Color _roleSeed(AppRole role) => switch (role) {
-      AppRole.aww => const Color(0xFF00695C),
-      AppRole.supervisor => const Color(0xFF2E7D32),
-      AppRole.doctor => const Color(0xFF1565C0),
-      AppRole.parent => const Color(0xFFE68A00),
-      AppRole.admin => const Color(0xFF4B5570),
-    };
+/// The accent per role — one table, shared with AppTheme (see RolePalette).
+Color _roleSeed(AppRole role) => RolePalette.of(role).accent;
