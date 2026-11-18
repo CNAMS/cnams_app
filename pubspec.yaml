@@ -51,6 +51,7 @@ dependencies:
   http: ^1.2.0
 
   # Utilities
+  file_picker: ^8.0.0
   uuid: ^4.4.0
   collection: ^1.18.0
 

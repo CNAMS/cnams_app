@@ -29,8 +29,15 @@ Future<void> main(List<String> args) async {
   final stopwatch = Stopwatch()..start();
   stdout.writeln('Running Flutter test suite with JSON reporter...');
 
+  var flutterExe = 'flutter';
+  if (Platform.isLinux || Platform.isMacOS) {
+    if (File('/home/danish1075/flutter/bin/flutter').existsSync()) {
+      flutterExe = '/home/danish1075/flutter/bin/flutter';
+    }
+  }
+
   final process = await Process.start(
-    'flutter',
+    flutterExe,
     ['test', '--reporter', 'json', ...args],
     runInShell: true,
   );
@@ -41,9 +48,8 @@ Future<void> main(List<String> args) async {
   final failed = <TestEntry>[];
   final skipped = <TestEntry>[];
 
-  final lineStream = process.stdout
-      .transform(utf8.decoder)
-      .transform(const LineSplitter());
+  final lineStream =
+      process.stdout.transform(utf8.decoder).transform(const LineSplitter());
 
   await for (final line in lineStream) {
     if (line.trim().isEmpty) continue;
@@ -96,8 +102,7 @@ Future<void> main(List<String> args) async {
             final msg = json['message'] as String? ?? '';
             tests[testId]!.messages.add(msg);
             if (msg.startsWith('Skip:')) {
-              tests[testId]!.skipReason =
-                  msg.replaceFirst('Skip:', '').trim();
+              tests[testId]!.skipReason = msg.replaceFirst('Skip:', '').trim();
             }
           }
           break;
@@ -116,8 +121,7 @@ Future<void> main(List<String> args) async {
             entry.isSkipped = isSkip;
 
             // Ignore internal loading tests (like "loading test/...")
-            if (entry.name.startsWith('loading ') &&
-                entry.suitePath != null) {
+            if (entry.name.startsWith('loading ') && entry.suitePath != null) {
               continue;
             }
 
@@ -146,8 +150,7 @@ Future<void> main(List<String> args) async {
   stopwatch.stop();
 
   final totalCount = passed.length + failed.length + skipped.length;
-  final durationSec =
-      (stopwatch.elapsedMilliseconds / 1000).toStringAsFixed(1);
+  final durationSec = (stopwatch.elapsedMilliseconds / 1000).toStringAsFixed(1);
 
   // Build GitHub Markdown Summary
   final buf = StringBuffer();
