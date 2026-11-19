@@ -129,7 +129,10 @@ jobs:
   # ==========================================================================
   build-ios:
     name: Build iOS (IPA & Runner.app)
-    runs-on: macos-14
+    # macos-latest, not a pinned image: GitHub retired macos-14, and a retired
+    # image cancels the job before it starts — which silently blocked every
+    # release, Android included.
+    runs-on: macos-latest
     if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     steps:
       - name: Checkout Source Code
@@ -179,6 +182,10 @@ jobs:
   publish-release:
     name: Publish to GitHub Releases
     needs: [build-android, build-ios]
+    # Field workers install the Android APK; an iOS build failure must not
+    # hold it back. Publish whenever Android succeeded, with the iOS files
+    # attached only if that build succeeded too.
+    if: always() && needs.build-android.result == 'success'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Source Code
@@ -193,6 +200,7 @@ jobs:
           path: release_assets/
 
       - name: Download iOS Artifacts
+        if: needs.build-ios.result == 'success'
         uses: actions/download-artifact@v4
         with:
           name: ios-builds
@@ -224,6 +232,9 @@ jobs:
           draft: false
           prerelease: false
           generate_release_notes: true
+          # The iOS files are absent when that build failed; publish the
+          # Android files rather than failing the whole release.
+          fail_on_unmatched_files: false
           files: |
             release_assets/Ankur-CGMS-android-universal.apk
             release_assets/Ankur-CGMS-android-arm64-v8a.apk
