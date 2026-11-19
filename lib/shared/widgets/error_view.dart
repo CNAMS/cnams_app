@@ -32,8 +32,11 @@ class ErrorView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            // A neutral icon: this view also shows local failures (the
+            // database, a file), and a cloud-off icon told workers their
+            // internet was the problem when it wasn't.
             Icon(
-              Icons.cloud_off,
+              Icons.error_outline,
               size: 56,
               color: theme.colorScheme.onSurfaceVariant,
             ),
