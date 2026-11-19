@@ -55,6 +55,17 @@ dependencies:
   uuid: ^4.4.0
   collection: ^1.18.0
 
+# path_provider_android 2.3.x rewrote the plugin on package:jni, and in
+# release builds its context lookup throws "ClassNotFoundException: Didn't
+# find class Landroid/content/Context;". getApplicationDocumentsDirectory()
+# therefore failed, the local database never opened, and the AWW roster,
+# Add child and every measurement failed on real phones (debug builds and
+# tests were fine). 2.2.23 is the last Pigeon-based release. Remove this pin
+# only after verifying a newer version in a release APK on a device.
+# Guarded by test/architecture/dependency_pins_test.dart.
+dependency_overrides:
+  path_provider_android: 2.2.23
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
